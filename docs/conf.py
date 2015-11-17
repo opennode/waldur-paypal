@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# NodeConductor SaltStack documentation build configuration file, created by
+# NodeConductor PayPal documentation build configuration file, created by
 # sphinx-quickstart on Sat Oct 31 15:56:13 2015.
 #
 # This file is execfile()d with the current directory set to its
@@ -43,7 +43,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'NodeConductor SaltStack'
+project = u'NodeConductor PayPal'
 copyright = u'2015, OpenNode'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -51,7 +51,7 @@ copyright = u'2015, OpenNode'
 # built documents.
 #
 # The short X.Y version.
-from nodeconductor_saltstack import __version__
+from nodeconductor_paypal import __version__
 
 version = __version__
 # The full version, including alpha/beta/rc tags.
@@ -178,7 +178,7 @@ html_static_path = ['_static']
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'NodeConductorSaltStackdoc'
+htmlhelp_basename = 'PayPal'
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -198,7 +198,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'NodeConductorSaltStack.tex', u'NodeConductor SaltStack Documentation',
+  ('index', 'PayPal.tex', u'NodeConductor PayPal Documentation',
    u'OpenNode', 'manual'),
 ]
 
@@ -228,7 +228,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'NodeConductor SaltStack', u'NodeConductor SaltStack Documentation',
+    ('index', 'NodeConductor PayPal', u'NodeConductor PayPal Documentation',
      [u'OpenNode'], 1)
 ]
 
@@ -242,8 +242,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'NodeConductorSaltStack', u'NodeConductor SaltStack Documentation',
-   u'OpenNode', 'NodeConductorSaltStack', 'One line description of project.',
+  ('index', 'PayPal', u'NodeConductor PayPal Documentation',
+   u'OpenNode', 'PayPal', 'One line description of project.',
    'Miscellaneous'),
 ]
 
