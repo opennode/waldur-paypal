@@ -178,7 +178,7 @@ html_static_path = ['_static']
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'PayPal'
+htmlhelp_basename = 'NodeConductorPayPaldoc'
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -198,7 +198,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'PayPal.tex', u'NodeConductor PayPal Documentation',
+  ('index', 'NodeConductorPayPal.tex', u'NodeConductor PayPal Documentation',
    u'OpenNode', 'manual'),
 ]
 
@@ -242,8 +242,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'PayPal', u'NodeConductor PayPal Documentation',
-   u'OpenNode', 'PayPal', 'One line description of project.',
+  ('index', 'NodeConductorPayPal', u'NodeConductor PayPal Documentation',
+   u'OpenNode', 'NodeConductorPayPal', 'One line description of project.',
    'Miscellaneous'),
 ]
 
