@@ -1,7 +1,7 @@
 Name: nodeconductor-paypal
 Summary: PayPal plugin for NodeConductor
 Group: Development/Libraries
-Version: 0.1.1
+Version: 0.1.0
 Release: 1.el7
 License: Copyright 2015 OpenNode LLC. All rights reserved.
 Url: http://nodeconductor.com
