@@ -6,6 +6,8 @@ before_install:
 - sudo apt-get install gcc libffi-dev libldap2-dev libsasl2-dev libssl-dev python-dev
 install:
 - python setup.py install
+script:
+- python setup.py test
 deploy:
   provider: pypi
   user: opennode
