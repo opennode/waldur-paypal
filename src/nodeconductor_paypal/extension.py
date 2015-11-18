@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 from nodeconductor.core import NodeConductorExtension
 
 
@@ -20,3 +22,14 @@ class PayPalExtension(NodeConductorExtension):
     def rest_urls():
         from .urls import register_in
         return register_in
+
+    @staticmethod
+    def celery_tasks():
+        from celery.schedules import crontab
+        return {
+            'debit-customers': {
+                'task': 'nodeconductor.paypal.debit_customers',
+                'schedule': crontab(hour=0, minute=30),
+                'args': (),
+            },
+        }
