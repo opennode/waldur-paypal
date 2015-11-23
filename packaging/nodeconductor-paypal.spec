@@ -44,6 +44,5 @@ rm -rf %{buildroot}
 * Wed Nov 18 2015 Jenkins <jenkins@opennodecloud.com> - 0.2.0-1.el7
 - New upstream release
 
-* Thu Nov 17 2015 Roman Kosenko <roman@opennodecloud.com> - 0.1.0-1.el7
+* Tue Nov 17 2015 Roman Kosenko <roman@opennodecloud.com> - 0.1.0-1.el7
 - Initial version of the package
-
