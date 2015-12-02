@@ -1,6 +1,8 @@
 import logging
 
+from django.conf import settings
 from django.shortcuts import redirect
+from django.views.static import serve
 from django_fsm import TransitionNotAllowed
 
 from rest_framework import mixins, viewsets, permissions, decorators, exceptions
@@ -11,8 +13,8 @@ from nodeconductor.structure.models import CustomerRole
 
 from .backend import PaypalBackend, PayPalError
 from .log import event_logger
-from .models import Payment
-from .serializers import PaymentSerializer, PaymentApproveSerializer
+from .models import Payment, Invoice, InvoiceItem
+from .serializers import PaymentSerializer, PaymentApproveSerializer, InvoiceSerializer
 
 
 class CreateByStaffOrOwnerMixin(object):
@@ -145,3 +147,25 @@ class PaymentView(CreateByStaffOrOwnerMixin,
         except TransitionNotAllowed:
             logging.warning('Unable to cancel payment because of invalid state')
             return redirect(backend.return_url)
+
+
+class InvoicesViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Invoice.objects.all()
+    serializer_class = InvoiceSerializer
+    lookup_field = 'uuid'
+
+    def _serve_pdf(self, request, pdf):
+        if not pdf:
+            raise exceptions.NotFound("There's no PDF for this invoice")
+
+        response = serve(request, pdf.name, document_root=settings.MEDIA_ROOT)
+        if request.query_params.get('download'):
+            filename = pdf.name.split('/')[-1]
+            response['Content-Type'] = 'application/pdf'
+            response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)
+
+        return response
+
+    @decorators.detail_route()
+    def pdf(self, request, uuid=None):
+        return self._serve_pdf(request, self.get_object().pdf)

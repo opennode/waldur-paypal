@@ -1,0 +1,68 @@
+{% load humanize %}
+<html>
+    <head>
+        <style type="text/css">
+        body {font-size: 18px}
+        @page {
+            size: a4 portrait;
+            @frame content_frame {          /* Content Frame */
+                left: 50pt; width: 512pt; top: 40pt; height: 632pt;
+            }
+            @frame footer_frame {           /* Another static Frame */
+                -pdf-frame-content: footer_content;
+                left: 50pt; width: 512pt; top: 772pt; height: 20pt;
+            }
+        }
+        #footer_content {
+            font-size: 14px;
+            text-align: right;
+        }
+        </style>
+    </head>
+    <body>
+        {# HINT: keep line breaks after <pdf:*> tags #}
+        <div id="footer_content">page <pdf:pagenumber>
+            of <pdf:pagecount>
+        </div>
+
+        <table>
+        <tr>
+            <td width="65%"></td>
+            <td width="35%"><h1>Invoice #{{ invoice.pk }}</h1></td>
+        </tr>
+        <tr><td colspan="2"><hr></td></tr>
+        <tr>
+            <td><h3>Payment details</h3></td>
+            <td>
+                Invoice start date: {{ invoice.start_date }}<br>
+                Invoice end date: {{ invoice.end_date }}<br>
+            </td>
+        </tr>
+        <tr><td colspan="2"><hr></td></tr>
+        <tr>
+            <td>
+                <b>Customer details</b><br>
+                Customer number: {{ invoice.customer.pk|add:10000 }}<br>
+                {{ invoice.customer.name }}<br>
+                {{ invoice.customer.contact_details }}
+            </td>
+        </tr>
+        </table>
+
+        <br>
+        <table cellpadding="2">
+            {% for item in invoice.items %}
+            <tr>
+                <td>{{ item.description }}</td>
+                <td width="250" align="right">{{ item.amount|floatformat:2|intcomma }} {{ currency }}</td>
+            </tr>
+            {% endfor %}
+            <tr><td colspan="3"><br></td></tr>
+            <tr><td colspan="3" style="padding: 10px 0"><hr></td></tr>
+            <tr style="font-size:24px">
+                <th align="right" colspan="3">Total: {{ invoice.total_amount|floatformat:2|intcomma }} {{ currency }}</th>
+            </tr>
+        </table>
+
+    </body>
+</html>
