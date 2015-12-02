@@ -1,9 +1,11 @@
+import os
 from StringIO import StringIO
 
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.db import models
 from django.template.loader import render_to_string
+from django.utils import timezone
 from django_fsm import transition, FSMIntegerField
 from model_utils.models import TimeStampedModel
 from xhtml2pdf.pisa import pisaDocument
@@ -96,9 +98,19 @@ class Invoice(UuidMixin):
         if self.pdf is not None:
             self.pdf.delete()
 
+        info = settings.NODECONDUCTOR_PAYPAL.get('INVOICE', {})
+        logo = info.get('logo', None)
+        if logo and not logo.startswith('/'):
+            logo = os.path.join(settings.BASE_DIR, logo)
+
+        currency = settings.NODECONDUCTOR_PAYPAL['BACKEND']['currency_name']
+
         html = render_to_string('nodeconductor_paypal/invoice.html', {
             'invoice': self,
-            'curency': settings.NODECONDUCTOR_PAYPAL['currency_name']
+            'invoice_date': timezone.now(),
+            'currency': currency,
+            'info': info,
+            'logo': logo
         })
 
         result = StringIO()

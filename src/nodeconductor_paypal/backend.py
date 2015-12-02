@@ -21,7 +21,7 @@ class PaypalPayment(object):
 class PaypalBackend(object):
 
     def __init__(self):
-        config = settings.NODECONDUCTOR_PAYPAL
+        config = settings.NODECONDUCTOR_PAYPAL['BACKEND']
         self.configure(**config)
 
     def configure(self, mode, client_id, client_secret, return_url, currency_name):

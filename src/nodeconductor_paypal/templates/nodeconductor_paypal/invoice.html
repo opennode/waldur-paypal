@@ -27,19 +27,18 @@
 
         <table>
         <tr>
-            <td width="65%"></td>
-            <td width="35%"><h1>Invoice #{{ invoice.pk }}</h1></td>
-        </tr>
-        <tr><td colspan="2"><hr></td></tr>
-        <tr>
-            <td><h3>Payment details</h3></td>
-            <td>
-                Invoice start date: {{ invoice.start_date }}<br>
-                Invoice end date: {{ invoice.end_date }}<br>
+            <td width="50%"><img src="{{ logo }}" width="70"></td>
+            <td width="50%">
+                <h3>Invoice #{{ invoice.pk }} from {{ invoice_date|date }}</h3>
             </td>
         </tr>
         <tr><td colspan="2"><hr></td></tr>
         <tr>
+            <td>
+                <b>{{ info.company }}</b><br>
+                Bank: {{ info.bank }}<br>
+                Bank account: {{ info.account }}
+            </td>
             <td>
                 <b>Customer details</b><br>
                 Customer number: {{ invoice.customer.pk|add:10000 }}<br>
@@ -49,17 +48,17 @@
         </tr>
         </table>
 
-        <br>
+        <p style="padding: 20px 0">Services consumed from {{ invoice.start_date }} till {{ invoice.end_date }}</p>
         <table cellpadding="2">
-            {% for item in invoice.items %}
+            {% for item in invoice.items.all %}
             <tr>
+                <td width="50">{{ forloop.counter }})</td>
                 <td>{{ item.description }}</td>
-                <td width="250" align="right">{{ item.amount|floatformat:2|intcomma }} {{ currency }}</td>
+                <td width="200" align="right">{{ item.amount|floatformat:2|intcomma }} {{ currency }}</td>
             </tr>
             {% endfor %}
-            <tr><td colspan="3"><br></td></tr>
-            <tr><td colspan="3" style="padding: 10px 0"><hr></td></tr>
-            <tr style="font-size:24px">
+            <tr><td colspan="3" style="padding: 20px 0"><hr></td></tr>
+            <tr style="font-size:20px">
                 <th align="right" colspan="3">Total: {{ invoice.total_amount|floatformat:2|intcomma }} {{ currency }}</th>
             </tr>
         </table>
