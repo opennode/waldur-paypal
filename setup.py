@@ -10,6 +10,7 @@ dev_requires = [
 install_requires = [
     'nodeconductor>=0.79.0',
     'paypalrestsdk>=1.10.0',
+    'xhtml2pdf>=0.0.6',
 ]
 
 

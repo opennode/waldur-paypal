@@ -76,19 +76,10 @@ class Invoice(UuidMixin):
         customer_path = 'customer'
 
     customer = models.ForeignKey(Customer, related_name='paypal_invoices')
-    closed = models.BooleanField(default=False)
     total_amount = models.DecimalField(max_digits=9, decimal_places=2)
     start_date = models.DateField()
     end_date = models.DateField()
     pdf = models.FileField(upload_to='paypal-invoices', blank=True, null=True)
-
-    @classmethod
-    def get_for_customer(cls, customer):
-        # TODO: Create default agreement if it does not exist
-        return cls.objects.filter(closed=False, customer=customer).last()
-
-    def update_total_amount(self):
-        self.total_amount = sum(self.items.values_list('amount', flat=True))
 
     def generate_invoice_file_name(self):
         return '{}-invoice-{}.pdf'.format(self.start_date.strftime('%Y-%m-%d'), self.pk)

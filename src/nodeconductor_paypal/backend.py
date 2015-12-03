@@ -5,7 +5,7 @@ import dateutil.parser
 import paypalrestsdk as paypal
 
 from django.conf import settings
-from django.utils import six
+from django.utils import six, timezone
 
 
 class PayPalError(Exception):
@@ -197,7 +197,7 @@ class PaypalBackend(object):
 
     def get_agreement_transactions(self, agreement_id, start_date, end_date=None):
         if not end_date:
-            end_date = datetime.datetime.now()
+            end_date = timezone.now()
 
         # If start and end date are the same PayPal raises exceptions
         # That's why we need to increase end_date by one day

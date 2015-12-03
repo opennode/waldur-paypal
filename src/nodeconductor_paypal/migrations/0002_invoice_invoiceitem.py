@@ -18,7 +18,6 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('uuid', uuidfield.fields.UUIDField(unique=True, max_length=32, editable=False, blank=True)),
-                ('closed', models.BooleanField(default=False)),
                 ('total_amount', models.DecimalField(max_digits=9, decimal_places=2)),
                 ('start_date', models.DateField()),
                 ('end_date', models.DateField()),
