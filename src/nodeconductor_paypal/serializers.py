@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from nodeconductor.core import serializers as core_serializers
 
-from .models import Payment
+from .models import Payment, Invoice, InvoiceItem
 
 
 class PaymentSerializer(core_serializers.AugmentedSerializerMixin,
@@ -36,3 +36,29 @@ class PaymentApproveSerializer(serializers.Serializer):
         if self.instance.backend_id != validated_data['payment_id']:
             raise serializers.ValidationError('Invalid paymentId')
         return validated_data
+
+
+class InvoiceItemSerializer(serializers.ModelSerializer):
+    class Meta(object):
+        model = InvoiceItem
+        fields = ('amount', 'description', 'created_at')
+
+
+class InvoiceSerializer(core_serializers.AugmentedSerializerMixin,
+                        serializers.HyperlinkedModelSerializer):
+
+    pdf = serializers.HyperlinkedIdentityField(view_name='paypal-invoice-pdf', lookup_field='uuid')
+    items = InvoiceItemSerializer(many=True, read_only=True)
+
+    class Meta(object):
+        model = Invoice
+        fields = (
+            'url', 'uuid', 'total_amount', 'pdf',
+            'start_date', 'end_date', 'items',
+            'customer', 'customer_uuid', 'customer_name'
+        )
+        related_paths = ('customer',)
+        extra_kwargs = {
+            'url': {'lookup_field': 'uuid', 'view_name': 'paypal-invoice-detail'},
+            'customer': {'lookup_field': 'uuid'}
+        }

@@ -38,3 +38,33 @@ Request should contain the following fields: amount, customer. Example request:
     }
 
 Response contains dictionary with single field named "approval_url". You should redirect to this URL in order to approve or cancel payment.
+
+
+List invoices
+-------------
+
+To get a list of invoices, run GET against **/api/paypal-invoices/** as an authenticated user.
+
+Example response:
+
+.. code-block:: javascript
+
+    {
+        "url": "http://example.com/api/paypal-invoices/8c791610f4194ef1b82b0bf472b6f20a/",
+        "uuid": "8c791610f4194ef1b82b0bf472b6f20a",
+        "total_amount": "90.00",
+        "pdf": "http://example.com/api/paypal-invoices/8c791610f4194ef1b82b0bf472b6f20a/pdf/",
+        "start_date": "2015-09-03",
+        "end_date": "2015-10-03",
+        "items": [
+            {
+                "amount": "90.00",
+                "description": "Monthly fee for premium plan",
+                "created_at": "2015-12-02T11:45:52.505Z"
+            }
+        ],
+        "customer": "http://example.com/api/customers/91c7c956fa864cc2a909ca18d84e2dd0/",
+        "customer_uuid": "91c7c956fa864cc2a909ca18d84e2dd0",
+        "customer_name": "Walter Lebowski"
+    }
+]
