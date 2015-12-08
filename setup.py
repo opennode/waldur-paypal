@@ -11,6 +11,8 @@ install_requires = [
     'nodeconductor>=0.79.0',
     'paypalrestsdk>=1.10.0',
     'xhtml2pdf>=0.0.6',
+    # transitive dependency from nodeconductor core requires Pillow version <3.0.0
+    'Pillow>=2.0.0,<3.0.0',
 ]
 
 
