@@ -10,12 +10,13 @@ dev_requires = [
 install_requires = [
     'nodeconductor>=0.79.0',
     'paypalrestsdk>=1.10.0',
+    'xhtml2pdf>=0.0.6',
 ]
 
 
 setup(
     name='nodeconductor-paypal',
-    version='0.2.2',
+    version='0.3.0',
     author='OpenNode Team',
     author_email='info@opennodecloud.com',
     url='http://nodeconductor.com',

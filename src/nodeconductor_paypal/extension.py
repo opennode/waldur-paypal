@@ -7,11 +7,19 @@ class PayPalExtension(NodeConductorExtension):
 
     class Settings:
         NODECONDUCTOR_PAYPAL = {
-            'mode': 'sandbox',
-            'client_id': '',
-            'client_secret': '',
-            'currency_name': 'USD',
-            'return_url': 'http://example.com/payment/return'
+            'BACKEND': {
+                'mode': 'sandbox',
+                'client_id': '',
+                'client_secret': '',
+                'currency_name': 'USD',
+                'return_url': 'http://example.com/payment/return',
+            },
+            'INVOICE': {
+                'logo': 'robohare.png',
+                'company': 'OpenNode',
+                'bank': 'American Bank',
+                'account': '123456789',
+            }
         }
 
     @staticmethod

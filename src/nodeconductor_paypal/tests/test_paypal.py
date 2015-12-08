@@ -14,12 +14,14 @@ from ..models import Payment
 
 @override_nodeconductor_settings(
     NODECONDUCTOR_PAYPAL={
-        'mode': 'sandbox',
-        'client_id': '',
-        'client_secret': '',
-        'currency_name': 'USD',
-        'return_url': 'http://example.com/payment/return',
-    },
+        'BACKEND': {
+            'mode': 'sandbox',
+            'client_id': '',
+            'client_secret': '',
+            'currency_name': 'USD',
+            'return_url': 'http://example.com/payment/return'
+        }
+    }
 )
 class PaypalPaymentTest(test.APISimpleTestCase):
 
