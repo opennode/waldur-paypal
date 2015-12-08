@@ -1,7 +1,7 @@
 Name: nodeconductor-paypal
 Summary: PayPal plugin for NodeConductor
 Group: Development/Libraries
-Version: 0.3.0
+Version: 0.2.2
 Release: 1.el7
 License: Copyright 2015 OpenNode LLC. All rights reserved.
 Url: http://nodeconductor.com
@@ -36,9 +36,6 @@ rm -rf %{buildroot}
 %defattr(-,root,root)
 
 %changelog
-* Tue Dec 8 2015 Victor Mireyev <victor@opennodecloud.com> - 0.3.0-1.el7
-- Implement invoices endpoint
-
 * Wed Nov 18 2015 Jenkins <jenkins@opennodecloud.com> - 0.2.2-1.el7
 - New upstream release
 
