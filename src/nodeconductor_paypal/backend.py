@@ -13,9 +13,10 @@ class PayPalError(Exception):
 
 
 class PaypalPayment(object):
-    def __init__(self, payment_id, approval_url):
+    def __init__(self, payment_id, approval_url, token):
         self.payment_id = payment_id
         self.approval_url = approval_url
+        self.token = token
 
 
 class PaypalBackend(object):
@@ -70,7 +71,8 @@ class PaypalBackend(object):
         try:
             if payment.create():
                 approval_url = self._find_approval_url(payment.links)
-                return PaypalPayment(payment.id, approval_url)
+                token = self._find_token(approval_url)
+                return PaypalPayment(payment.id, approval_url, token)
             else:
                 raise PayPalError(payment.error)
         except paypal.exceptions.ConnectionError as e:

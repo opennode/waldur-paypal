@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.reverse import reverse
 
 from nodeconductor.core import serializers as core_serializers
 
@@ -33,10 +34,11 @@ class PaymentSerializer(core_serializers.AugmentedSerializerMixin,
 class PaymentApproveSerializer(serializers.Serializer):
     payment_id = serializers.CharField()
     payer_id = serializers.CharField()
+    token = serializers.CharField()
 
 
 class PaymentCancelSerializer(serializers.Serializer):
-    payment_id = serializers.CharField()
+    token = serializers.CharField()
 
 
 class InvoiceItemSerializer(serializers.ModelSerializer):
@@ -65,6 +67,10 @@ class InvoiceSerializer(core_serializers.AugmentedSerializerMixin,
         }
 
     def get_pdf(self, invoice):
+        """
+        Format URL to PDF view if file is specified
+        """
         if invoice.pdf:
-            return serializers.HyperlinkedIdentityField(
-                    view_name='paypal-invoice-pdf', lookup_field='uuid').data
+            return reverse('paypal-invoice-pdf',
+                           kwargs={'uuid': invoice.uuid},
+                           request=self.context['request'])
