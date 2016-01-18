@@ -29,7 +29,8 @@ class BasePaymentTest(test.APISimpleTestCase):
 
         self.valid_response = {
             'approval_url': 'https://www.paypal.com/webscr?cmd=_express-checkout&token=EC-60U79048BN7719609',
-            'payer_id': '7E7MGXCWTTKK2'
+            'payer_id': '7E7MGXCWTTKK2',
+            'token': 'EC-60U79048BN7719609'
         }
 
 
@@ -42,7 +43,8 @@ class PaymentCreationTest(BasePaymentTest):
             else:
                 backend().make_payment.return_value = PaypalPayment(
                         payment_id='PAY-6RV70583SB702805EKEYSZ6Y',
-                        approval_url=self.valid_response['approval_url'])
+                        approval_url=self.valid_response['approval_url'],
+                        token=self.valid_response['token'])
 
             self.client.force_authenticate(user)
             return self.client.post(PaypalPaymentFactory.get_list_url(), data=self.valid_request)
@@ -83,7 +85,8 @@ class PaymentApprovalTest(BasePaymentTest):
             self.client.force_authenticate(user)
             return self.client.post(PaypalPaymentFactory.get_list_url() + 'approve/', data={
                 'payment_id': payment.backend_id,
-                'payer_id': self.valid_response['payer_id']
+                'payer_id': self.valid_response['payer_id'],
+                'token': payment.token
             })
 
     # Positive tests
@@ -121,7 +124,7 @@ class PaymentCancellationTest(BasePaymentTest):
         self.client.force_authenticate(user)
         payment = PaypalPaymentFactory(customer=self.customer, state=Payment.States.CREATED)
         return self.client.post(PaypalPaymentFactory.get_list_url() + 'cancel/', data={
-            'payment_id': payment.backend_id
+            'token': payment.token
         })
 
     # Positive tests

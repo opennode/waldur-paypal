@@ -65,6 +65,7 @@ class PaymentView(CreateByStaffOrOwnerMixin,
 
             payment.backend_id = backend_payment.payment_id
             payment.approval_url = backend_payment.approval_url
+            payment.token = backend_payment.token
             payment.set_created()
             payment.save()
 
@@ -82,23 +83,23 @@ class PaymentView(CreateByStaffOrOwnerMixin,
             payment.save()
             raise exceptions.APIException()
 
-    def get_payment(self, payment_id):
+    def get_payment(self, token):
         """
-        Find Paypal payment object in the database by payment_id
+        Find Paypal payment object in the database by token
         and check if current user has access to it.
-        :param payment_id: string
+        :param token: string
         :return: Payment object
         """
-        error_message = "Payment %s does not exist" % payment_id
+        error_message = "Payment with token %s does not exist" % token
 
         try:
-            payment = Payment.objects.get(backend_id=payment_id)
+            payment = Payment.objects.get(token=token)
         except Payment.DoesNotExist:
             raise NotFound(error_message)
 
         is_owner = payment.customer.has_user(self.request.user, CustomerRole.OWNER)
         if not self.request.user.is_staff and not is_owner:
-            raise NotFound("Payment %s does not exist" % payment_id)
+            raise NotFound(error_message)
 
         return payment
 
@@ -112,7 +113,8 @@ class PaymentView(CreateByStaffOrOwnerMixin,
 
         payment_id = serializer.validated_data['payment_id']
         payer_id = serializer.validated_data['payer_id']
-        payment = self.get_payment(payment_id)
+        token = serializer.validated_data['token']
+        payment = self.get_payment(token)
 
         try:
             PaypalBackend().approve_payment(payment_id, payer_id)
@@ -148,8 +150,8 @@ class PaymentView(CreateByStaffOrOwnerMixin,
         serializer = PaymentCancelSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        payment_id = serializer.validated_data['payment_id']
-        payment = self.get_payment(payment_id)
+        token = serializer.validated_data['token']
+        payment = self.get_payment(token)
 
         try:
             payment.set_cancelled()

@@ -14,6 +14,7 @@ class PaypalPaymentFactory(factory.DjangoModelFactory):
     amount = 10
     customer = factory.SubFactory(structure_factories.CustomerFactory)
     backend_id = factory.Sequence(lambda n: 'PAYMENT-ABC-%s' % n)
+    token = factory.Sequence(lambda n: 'TOKEN-%s' % n)
 
     @classmethod
     def get_url(self, payment=None, action=None):
