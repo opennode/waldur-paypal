@@ -10,17 +10,19 @@ class PaymentSerializer(core_serializers.AugmentedSerializerMixin,
 
     amount = serializers.DecimalField(max_digits=9, decimal_places=2)
     state = serializers.ReadOnlyField(source='get_state_display')
+    return_url = serializers.CharField(write_only=True)
+    cancel_url = serializers.CharField(write_only=True)
 
     class Meta(object):
         model = Payment
 
         fields = (
             'url', 'uuid', 'created', 'modified', 'state',
-            'amount', 'customer', 'approval_url'
+            'amount', 'customer', 'return_url', 'cancel_url', 'approval_url'
         )
 
         read_only_fields = ('approval_url',)
-        protected_fields = ('customer', 'amount')
+        protected_fields = ('customer', 'amount', 'return_url', 'cancel_url')
 
         extra_kwargs = {
             'url': {'lookup_field': 'uuid', 'view_name': 'paypal-payment-detail'},
@@ -32,10 +34,9 @@ class PaymentApproveSerializer(serializers.Serializer):
     payment_id = serializers.CharField()
     payer_id = serializers.CharField()
 
-    def validate(self, validated_data):
-        if self.instance.backend_id != validated_data['payment_id']:
-            raise serializers.ValidationError('Invalid paymentId')
-        return validated_data
+
+class PaymentCancelSerializer(serializers.Serializer):
+    payment_id = serializers.CharField()
 
 
 class InvoiceItemSerializer(serializers.ModelSerializer):
@@ -47,7 +48,7 @@ class InvoiceItemSerializer(serializers.ModelSerializer):
 class InvoiceSerializer(core_serializers.AugmentedSerializerMixin,
                         serializers.HyperlinkedModelSerializer):
 
-    pdf = serializers.HyperlinkedIdentityField(view_name='paypal-invoice-pdf', lookup_field='uuid')
+    pdf = serializers.SerializerMethodField()
     items = InvoiceItemSerializer(many=True, read_only=True)
 
     class Meta(object):
@@ -62,3 +63,8 @@ class InvoiceSerializer(core_serializers.AugmentedSerializerMixin,
             'url': {'lookup_field': 'uuid', 'view_name': 'paypal-invoice-detail'},
             'customer': {'lookup_field': 'uuid'}
         }
+
+    def get_pdf(self, invoice):
+        if invoice.pdf:
+            return serializers.HyperlinkedIdentityField(
+                    view_name='paypal-invoice-pdf', lookup_field='uuid').data
