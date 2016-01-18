@@ -11,8 +11,7 @@ class PayPalExtension(NodeConductorExtension):
                 'mode': 'sandbox',
                 'client_id': '',
                 'client_secret': '',
-                'currency_name': 'USD',
-                'return_url': 'http://example.com/payment/return',
+                'currency_name': 'USD'
             },
             'INVOICE': {
                 'logo': 'robohare.png',

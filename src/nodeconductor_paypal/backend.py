@@ -24,9 +24,8 @@ class PaypalBackend(object):
         config = settings.NODECONDUCTOR_PAYPAL['BACKEND']
         self.configure(**config)
 
-    def configure(self, mode, client_id, client_secret, return_url, currency_name):
+    def configure(self, mode, client_id, client_secret, currency_name, **kwargs):
         # extra method to validate required config options
-        self.return_url = return_url
         self.currency_name = currency_name
 
         paypal.configure({

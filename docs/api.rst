@@ -28,16 +28,62 @@ Create new payment
 ------------------
 
 In order to create new payment, run POST against **/api/paypal-payments/** as an authenticated user.
-Request should contain the following fields: amount, customer. Example request:
+User can create payment only for owned customers or for any customer if user is staff.
+Request should contain the following fields: amount, customer, return_url, cancel_url.
+
+These URLs usually correspond to frontend application.
+If payment is approved PayPal will redirect user to return_url appending fields paymentId, PayerID.
+For example: http://example.com/api/return/?paymentId=PAY-9T203937VX119544XK2ONUWA&token=EC-39L024900R781241G&PayerID=LADSTLPRRPH3C
+Then client-side script should issue new request for approving payment using provided fields.
+
+Example request:
 
 .. code-block:: javascript
 
     {
         "amount": "99.99",
-        "customer": "http://example.com/api/customers/211ca3327de945899375749bd55dae4a/"
+        "customer": "http://example.com/api/customers/211ca3327de945899375749bd55dae4a/",
+        "return_url": "http://frontend.example.com/return/",
+        "cancel_url": "http://frontend.example.com/cancel/"
     }
 
-Response contains dictionary with single field named "approval_url". You should redirect to this URL in order to approve or cancel payment.
+Response contains dictionary with single field named "approval_url".
+You should redirect to this URL in order to approve or cancel payment.
+
+Approve pending payment
+-----------------------
+
+In order to approve payment, run POST against **/api/paypal-payments/approve/** as an authenticated user.
+User can approve payment only for owned customers or for any customer if user is staff.
+Request should contain the following fields: payment_id, payer_id.
+
+Example request:
+
+.. code-block:: javascript
+
+    {
+        "payment_id": "PAY-6RV70583SB702805EKEYSZ6Y",
+        "payer_id": "7E7MGXCWTTKK2"
+    }
+
+Response contains dictionary with success or error message.
+Example response:
+
+.. code-block:: javascript
+
+    {
+        "detail": "Unable to approve payment because of invalid state."
+    }
+
+
+Cancel payment
+--------------
+
+In order to cancel payment, run POST against **/api/paypal-payments/cancel/** as an authenticated user.
+User can cancel payment only for owned customers or for any customer if user is staff.
+
+Request should contain payment_id only.
+Response contains dictionary with success message.
 
 
 List invoices
