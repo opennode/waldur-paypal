@@ -18,7 +18,7 @@ install_requires = [
 
 setup(
     name='nodeconductor-paypal',
-    version='0.3.1',
+    version='v0.3.2',
     author='OpenNode Team',
     author_email='info@opennodecloud.com',
     url='http://nodeconductor.com',

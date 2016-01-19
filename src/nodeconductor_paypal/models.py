@@ -39,8 +39,11 @@ class Payment(LoggableMixin, TimeStampedModel, UuidMixin):
     customer = models.ForeignKey(Customer)
     amount = models.DecimalField(max_digits=9, decimal_places=2)
 
-    # Payment ID is required and fetched from backend
+    # Payment ID is persistent identifier of payment
     backend_id = models.CharField(max_length=255, null=True)
+
+    # Token is temporary identifier of payment
+    token = models.CharField(max_length=255, null=True)
 
     # URL is fetched from backend
     approval_url = models.URLField()
