@@ -20,7 +20,11 @@ def debit_customers():
     # XXX: it's just a placeholder, it doesn't work properly now nor implemented anyhow
     #      perhaps it should merely use price estimates..
 
-    for model in SupportedServices.get_resource_models().keys():
+    # TODO: remove once iaas has been deprecated
+    from nodeconductor.iaas.models import Instance
+    models = filter(lambda model: model != Instance, SupportedServices.get_resource_models().values())
+
+    for model in models:
         resources = model.objects.filter(
             service_project_link__service__settings__shared=True)
 
