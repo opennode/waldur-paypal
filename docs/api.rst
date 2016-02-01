@@ -2,7 +2,9 @@ List payments
 -------------
 
 To get a list of payments, run GET against **/api/paypal-payments/** as an authenticated user.
-It contains the following fields:
+You may filter payments by customer UUID using `customer` parameter.
+
+Each payment object contains the following fields:
 
 - amount: specify total amount of money; the currency is specified in application's settings
 - customer: URL of customer, because balance is related to particular customer
@@ -90,6 +92,7 @@ List invoices
 -------------
 
 To get a list of invoices, run GET against **/api/paypal-invoices/** as an authenticated user.
+You may filter payments by customer UUID using `customer` parameter.
 
 Example response:
 

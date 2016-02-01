@@ -7,11 +7,13 @@ from django_fsm import TransitionNotAllowed
 from rest_framework import mixins, viewsets, permissions, decorators, exceptions, status
 from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
+from rest_framework.filters import DjangoFilterBackend
 
 from nodeconductor.structure.filters import GenericRoleFilter
 from nodeconductor.structure.models import CustomerRole
 
 from .backend import PaypalBackend, PayPalError
+from .filters import InvoiceFilter, PaymentFilter
 from .log import event_logger
 from .models import Payment, Invoice
 from .serializers import PaymentSerializer, PaymentApproveSerializer, InvoiceSerializer, PaymentCancelSerializer
@@ -39,7 +41,11 @@ class PaymentView(CreateByStaffOrOwnerMixin,
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
     lookup_field = 'uuid'
-    filter_backends = (GenericRoleFilter,)
+    filter_backends = (
+        GenericRoleFilter,
+        DjangoFilterBackend
+    )
+    filter_class = PaymentFilter
     permission_classes = (
         permissions.IsAuthenticated,
         permissions.DjangoObjectPermissions,
@@ -173,6 +179,15 @@ class InvoicesViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Invoice.objects.all()
     serializer_class = InvoiceSerializer
     lookup_field = 'uuid'
+    filter_backends = (
+        GenericRoleFilter,
+        DjangoFilterBackend
+    )
+    filter_class = InvoiceFilter
+    permission_classes = (
+        permissions.IsAuthenticated,
+        permissions.DjangoObjectPermissions,
+    )
 
     def _serve_pdf(self, request, pdf):
         if not pdf:
