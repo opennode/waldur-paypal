@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import os
 from StringIO import StringIO
 
@@ -6,6 +8,7 @@ from django.core.files.base import ContentFile
 from django.db import models
 from django.template.loader import render_to_string
 from django.utils import timezone
+from django.utils.encoding import python_2_unicode_compatible
 from django_fsm import transition, FSMIntegerField
 from model_utils.models import TimeStampedModel
 from xhtml2pdf.pisa import pisaDocument
@@ -15,6 +18,7 @@ from nodeconductor.logging.log import LoggableMixin
 from nodeconductor.structure.models import Customer
 
 
+@python_2_unicode_compatible
 class Payment(LoggableMixin, TimeStampedModel, UuidMixin):
 
     class Permissions(object):
