@@ -75,7 +75,7 @@ class Payment(LoggableMixin, TimeStampedModel, UuidMixin):
         pass
 
 
-class Invoice(UuidMixin):
+class Invoice(LoggableMixin, UuidMixin):
     class Meta:
         ordering = ['-start_date']
 
@@ -87,6 +87,9 @@ class Invoice(UuidMixin):
     start_date = models.DateField()
     end_date = models.DateField()
     pdf = models.FileField(upload_to='paypal-invoices', blank=True, null=True)
+
+    def get_log_fields(self):
+        return ('uuid', 'customer', 'total_amount', 'start_date', 'end_date')
 
     def generate_invoice_file_name(self):
         return '{}-invoice-{}.pdf'.format(self.start_date.strftime('%Y-%m-%d'), self.pk)
