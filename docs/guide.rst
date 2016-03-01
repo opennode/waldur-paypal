@@ -9,7 +9,7 @@ To setup a PayPal integration, add a block of configuration as shown in the exam
     # Example of settings for billing using PayPal API.
     NODECONDUCTOR_PAYPAL = {
         'BACKEND': {
-            'mode': 'production',
+            'mode': 'sandbox or live',
             'client_id': '<CLIENT_ID>',
             'client_secret': '<CLIENT_SECRET>',
             'currency_name': 'USD'
