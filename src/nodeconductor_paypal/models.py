@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import logging
 import os
 from StringIO import StringIO
 
@@ -16,6 +17,9 @@ from xhtml2pdf.pisa import pisaDocument
 from nodeconductor.core.models import UuidMixin
 from nodeconductor.logging.log import LoggableMixin
 from nodeconductor.structure.models import Customer
+
+
+logger = logging.getLogger(__name__)
 
 
 @python_2_unicode_compatible
@@ -75,6 +79,7 @@ class Payment(LoggableMixin, TimeStampedModel, UuidMixin):
         pass
 
 
+@python_2_unicode_compatible
 class Invoice(LoggableMixin, UuidMixin):
     class Meta:
         ordering = ['-start_date']
@@ -121,6 +126,9 @@ class Invoice(LoggableMixin, UuidMixin):
             logger.error('Unable to save PDF to file: %s', pdf.err)
         else:
             self.save(update_fields=['pdf'])
+
+    def __str__(self):
+        return "Invoice #%s" % self.id
 
 
 class InvoiceItem(models.Model):
