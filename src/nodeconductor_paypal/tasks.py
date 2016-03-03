@@ -1,8 +1,12 @@
+import logging
 from datetime import timedelta, datetime
 
 from celery import shared_task
 
 from nodeconductor.structure import SupportedServices
+from .models import Invoice
+
+logger = logging.getLogger(__name__)
 
 
 @shared_task(name='nodeconductor.paypal.debit_customers')
@@ -35,3 +39,14 @@ def debit_customers():
                 continue
             else:
                 resource.customer.debit_account(data['total_amount'])
+
+
+@shared_task(name='nodeconductor.paypal.generate_invoice_pdf')
+def generate_invoice_pdf(invoice_id):
+    try:
+        invoice = Invoice.objects.get(pk=invoice_id)
+    except Invoice.DoesNotExist:
+        logger.warning('Missing invoice with id %s', invoice.id)
+        return
+
+    invoice.generate_pdf()
