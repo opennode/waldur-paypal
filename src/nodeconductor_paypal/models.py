@@ -14,7 +14,7 @@ from django_fsm import transition, FSMIntegerField
 from model_utils.models import TimeStampedModel
 from xhtml2pdf.pisa import pisaDocument
 
-from nodeconductor.core.models import UuidMixin
+from nodeconductor.core.models import UuidMixin, ErrorMessageMixin
 from nodeconductor.logging.log import LoggableMixin
 from nodeconductor.structure.models import Customer
 
@@ -23,7 +23,9 @@ logger = logging.getLogger(__name__)
 
 
 @python_2_unicode_compatible
-class Payment(LoggableMixin, TimeStampedModel, UuidMixin):
+class Payment(LoggableMixin, TimeStampedModel, UuidMixin, ErrorMessageMixin):
+    class Meta:
+        ordering = ['-modified']
 
     class Permissions(object):
         customer_path = 'customer'
