@@ -84,8 +84,10 @@ class PaymentView(CreateByStaffOrOwnerMixin,
             )
 
         except PayPalError as e:
-            logging.warning('Unable to create payment because of backend error %s', e)
+            message = 'Unable to create payment because of backend error %s' % e
+            logging.warning(message)
             payment.set_erred()
+            payment.error_message = message
             payment.save()
             raise exceptions.APIException()
 
@@ -127,6 +129,7 @@ class PaymentView(CreateByStaffOrOwnerMixin,
 
             payment.customer.credit_account(payment.amount)
             payment.set_approved()
+            payment.error_message = ''
             payment.save()
 
             event_logger.paypal_payment.info(
@@ -139,13 +142,16 @@ class PaymentView(CreateByStaffOrOwnerMixin,
         except PayPalError as e:
             message = 'Unable to approve payment because of backend error %s' % e
             logging.warning(message)
+            payment.error_message = message
             payment.save()
             raise exceptions.APIException(message)
 
         except TransitionNotAllowed:
+            message = 'Unable to approve payment because of invalid state.'
             payment.set_erred()
+            payment.error_message = message
             payment.save()
-            return Response({'detail': 'Unable to approve payment because of invalid state.'},
+            return Response({'detail': message},
                             status=status.HTTP_409_CONFLICT)
 
     @decorators.list_route(methods=['POST'])
