@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from django.db import models, migrations
 import model_utils.fields
 import django.utils.timezone
-import nodeconductor.logging.log
+import nodeconductor.logging.loggers
 import django_fsm
 import uuidfield.fields
 
@@ -33,6 +33,6 @@ class Migration(migrations.Migration):
                 'abstract': False,
                 'ordering': ['-modified']
             },
-            bases=(nodeconductor.logging.log.LoggableMixin, models.Model),
+            bases=(nodeconductor.logging.loggers.LoggableMixin, models.Model),
         ),
     ]

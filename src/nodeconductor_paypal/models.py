@@ -15,7 +15,7 @@ from model_utils.models import TimeStampedModel
 from xhtml2pdf.pisa import pisaDocument
 
 from nodeconductor.core.models import UuidMixin, ErrorMessageMixin
-from nodeconductor.logging.log import LoggableMixin
+from nodeconductor.logging.loggers import LoggableMixin
 from nodeconductor.structure.models import Customer
 
 
