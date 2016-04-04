@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+
+import logging
 import os
 from StringIO import StringIO
 
@@ -6,16 +9,23 @@ from django.core.files.base import ContentFile
 from django.db import models
 from django.template.loader import render_to_string
 from django.utils import timezone
+from django.utils.encoding import python_2_unicode_compatible
 from django_fsm import transition, FSMIntegerField
 from model_utils.models import TimeStampedModel
 from xhtml2pdf.pisa import pisaDocument
 
-from nodeconductor.core.models import UuidMixin
-from nodeconductor.logging.log import LoggableMixin
+from nodeconductor.core.models import UuidMixin, ErrorMessageMixin
+from nodeconductor.logging.loggers import LoggableMixin
 from nodeconductor.structure.models import Customer
 
 
-class Payment(LoggableMixin, TimeStampedModel, UuidMixin):
+logger = logging.getLogger(__name__)
+
+
+@python_2_unicode_compatible
+class Payment(LoggableMixin, TimeStampedModel, UuidMixin, ErrorMessageMixin):
+    class Meta:
+        ordering = ['-modified']
 
     class Permissions(object):
         customer_path = 'customer'
@@ -71,7 +81,8 @@ class Payment(LoggableMixin, TimeStampedModel, UuidMixin):
         pass
 
 
-class Invoice(UuidMixin):
+@python_2_unicode_compatible
+class Invoice(LoggableMixin, UuidMixin):
     class Meta:
         ordering = ['-start_date']
 
@@ -83,6 +94,9 @@ class Invoice(UuidMixin):
     start_date = models.DateField()
     end_date = models.DateField()
     pdf = models.FileField(upload_to='paypal-invoices', blank=True, null=True)
+
+    def get_log_fields(self):
+        return ('uuid', 'customer', 'total_amount', 'start_date', 'end_date')
 
     def generate_invoice_file_name(self):
         return '{}-invoice-{}.pdf'.format(self.start_date.strftime('%Y-%m-%d'), self.pk)
@@ -114,6 +128,9 @@ class Invoice(UuidMixin):
             logger.error('Unable to save PDF to file: %s', pdf.err)
         else:
             self.save(update_fields=['pdf'])
+
+    def __str__(self):
+        return "Invoice #%s" % self.id
 
 
 class InvoiceItem(models.Model):

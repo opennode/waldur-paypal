@@ -1,8 +1,12 @@
+import logging
 from datetime import timedelta, datetime
 
 from celery import shared_task
 
 from nodeconductor.structure import SupportedServices
+from .models import Invoice
+
+logger = logging.getLogger(__name__)
 
 
 @shared_task(name='nodeconductor.paypal.debit_customers')
@@ -20,7 +24,11 @@ def debit_customers():
     # XXX: it's just a placeholder, it doesn't work properly now nor implemented anyhow
     #      perhaps it should merely use price estimates..
 
-    for model in SupportedServices.get_resource_models().keys():
+    # TODO: remove once iaas has been deprecated
+    from nodeconductor.iaas.models import Instance
+    models = filter(lambda model: model != Instance, SupportedServices.get_resource_models().values())
+
+    for model in models:
         resources = model.objects.filter(
             service_project_link__service__settings__shared=True)
 
@@ -31,3 +39,14 @@ def debit_customers():
                 continue
             else:
                 resource.customer.debit_account(data['total_amount'])
+
+
+@shared_task(name='nodeconductor.paypal.generate_invoice_pdf')
+def generate_invoice_pdf(invoice_id):
+    try:
+        invoice = Invoice.objects.get(pk=invoice_id)
+    except Invoice.DoesNotExist:
+        logger.warning('Missing invoice with id %s', invoice.id)
+        return
+
+    invoice.generate_pdf()

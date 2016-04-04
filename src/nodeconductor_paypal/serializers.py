@@ -19,10 +19,10 @@ class PaymentSerializer(core_serializers.AugmentedSerializerMixin,
 
         fields = (
             'url', 'uuid', 'created', 'modified', 'state',
-            'amount', 'customer', 'return_url', 'cancel_url', 'approval_url'
+            'amount', 'customer', 'return_url', 'cancel_url', 'approval_url', 'error_message'
         )
 
-        read_only_fields = ('approval_url',)
+        read_only_fields = ('approval_url', 'error_message')
         protected_fields = ('customer', 'amount', 'return_url', 'cancel_url')
 
         extra_kwargs = {
