@@ -2,9 +2,11 @@ import logging
 from datetime import timedelta, datetime
 
 from celery import shared_task
+from django.conf import settings
+from django.utils import timezone
 
 from nodeconductor.structure import SupportedServices
-from .models import Invoice
+from .models import Invoice, Payment
 
 logger = logging.getLogger(__name__)
 
@@ -50,3 +52,9 @@ def generate_invoice_pdf(invoice_id):
         return
 
     invoice.generate_pdf()
+
+
+@shared_task(name='nodeconductor.paypal.payments_cleanup')
+def payments_cleanup():
+    timespan = settings.NODECONDUCTOR_PAYPAL.get('STALE_PAYMENTS_LIFETIME', timedelta(weeks=1))
+    Payment.objects.filter(state=Payment.States.CREATED, created__lte=timezone.now() - timespan).delete()
