@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+from datetime import timedelta
+
 from nodeconductor.core import NodeConductorExtension
 
 
@@ -18,7 +20,8 @@ class PayPalExtension(NodeConductorExtension):
                 'company': 'OpenNode',
                 'bank': 'American Bank',
                 'account': '123456789',
-            }
+            },
+            'STALE_PAYMENTS_LIFETIME': timedelta(weeks=1)
         }
 
     @staticmethod
@@ -39,4 +42,9 @@ class PayPalExtension(NodeConductorExtension):
                 'schedule': crontab(hour=0, minute=30),
                 'args': (),
             },
+            'payments-cleanup': {
+                'task': 'nodeconductor.paypal.payments_cleanup',
+                'schedule': timedelta(hours=24),
+                'args': (),
+            }
         }
