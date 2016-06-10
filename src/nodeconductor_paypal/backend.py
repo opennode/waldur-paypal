@@ -93,7 +93,7 @@ class PaypalBackend(object):
 
     def create_plan(self, amount, name, description, return_url, cancel_url):
         """
-        Create and activate montlhy billing plan using PayPal Rest API.
+        Create and activate monthly billing plan using PayPal Rest API.
         On success returns plan_id
         """
         plan = paypal.BillingPlan({
@@ -131,7 +131,7 @@ class PaypalBackend(object):
         Create billing agreement. On success returns approval_url and token
         """
         # PayPal does not support immediate start of agreement
-        # That's why we need to artifically increase start date by small amount of time
+        # That's why we need to increase start date by small amount of time
         start_date = datetime.datetime.utcnow() + datetime.timedelta(minutes=1)
 
         # PayPal does not fully support ISO 8601 format
