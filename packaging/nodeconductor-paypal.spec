@@ -7,7 +7,7 @@ License: Copyright 2015 OpenNode LLC. All rights reserved.
 Url: http://nodeconductor.com
 Source0: %{name}-%{version}.tar.gz
 
-Requires: nodeconductor >= 0.79.0
+Requires: nodeconductor > 0.101.3
 Requires: python-paypal-rest-sdk >= 1.10.0
 Requires: python-xhtml2pdf >= 0.0.6
 

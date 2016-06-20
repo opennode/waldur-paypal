@@ -49,15 +49,29 @@ class PaypalBackend(object):
             raise PayPalError('Unable to parse token from approval_url')
         return token[0]
 
-    def make_payment(self, amount, description, return_url, cancel_url):
+    def make_payment(self, total, subtotal, tax, description, return_url, cancel_url):
+        """
+        Make PayPal single using Express Checkout workflow.
+        :param total: Decimal value of payment including VAT tax
+        :param subtotal: Decimal value of payment without VAT tax
+        :param tax: Decimal value of VAT tax
+        :param description: Description of payment
+        :param return_url: Callback view URL for approved payment
+        :param cancel_url: Callback view URL for cancelled payment
+        :return: Object containing backend payment id, approval URL and token.
+        """
         payment = paypal.Payment({
             'intent': 'sale',
             'payer': {'payment_method': 'paypal'},
             'transactions': [
                 {
                     'amount': {
-                        'total': str(amount),  # serialize decimal
-                        'currency': self.currency_name
+                        'total': str(total),  # serialize decimal
+                        'currency': self.currency_name,
+                        'details': {
+                            'subtotal': str(subtotal),
+                            'tax': str(tax)
+                        }
                     },
                     'description': description
                 }

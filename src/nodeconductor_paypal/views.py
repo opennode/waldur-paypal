@@ -1,4 +1,5 @@
 import logging
+from decimal import Decimal
 
 from django.conf import settings
 from django.views.static import serve
@@ -10,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework.filters import DjangoFilterBackend
 
 from nodeconductor.structure.filters import GenericRoleFilter
-from nodeconductor.structure.models import CustomerRole
+from nodeconductor.structure.models import CustomerRole, VATException
 
 from .backend import PaypalBackend, PayPalError
 from .filters import InvoiceFilter, PaymentFilter
@@ -62,9 +63,17 @@ class PaymentView(CreateByStaffOrOwnerMixin,
         customer = serializer.validated_data['customer']
         payment = serializer.save()
 
+        subtotal = serializer.validated_data['amount']
+        try:
+            rate = customer.get_vat_rate() or 0
+        except (NotImplemented, VATException):
+            rate = 0
+        tax = Decimal(rate) / Decimal(100) * subtotal
+        total = tax + subtotal
+
         try:
             backend_payment = PaypalBackend().make_payment(
-                amount=serializer.validated_data['amount'],
+                total, subtotal, tax,
                 description='Replenish account in NodeConductor for %s' % customer.name,
                 return_url=return_url,
                 cancel_url=cancel_url)
