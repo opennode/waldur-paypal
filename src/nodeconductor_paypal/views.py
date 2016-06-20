@@ -20,6 +20,9 @@ from .models import Payment, Invoice
 from .serializers import PaymentSerializer, PaymentApproveSerializer, InvoiceSerializer, PaymentCancelSerializer
 
 
+logger = logging.getLogger(__name__)
+
+
 class CreateByStaffOrOwnerMixin(object):
 
     def create(self, request):
@@ -66,8 +69,10 @@ class PaymentView(CreateByStaffOrOwnerMixin,
         subtotal = serializer.validated_data['amount']
         try:
             rate = customer.get_vat_rate() or 0
-        except (NotImplemented, VATException):
+        except (NotImplemented, VATException) as e:
             rate = 0
+            logger.warning('Unable to compute VAT rate for customer with UUID %s, error is %s',
+                           customer.uuid, e)
         tax = Decimal(rate) / Decimal(100) * subtotal
         total = tax + subtotal
 
@@ -94,7 +99,7 @@ class PaymentView(CreateByStaffOrOwnerMixin,
 
         except PayPalError as e:
             message = 'Unable to create payment because of backend error %s' % e
-            logging.warning(message)
+            logger.warning(message)
             payment.set_erred()
             payment.error_message = message
             payment.save()
@@ -150,7 +155,7 @@ class PaymentView(CreateByStaffOrOwnerMixin,
 
         except PayPalError as e:
             message = 'Unable to approve payment because of backend error %s' % e
-            logging.warning(message)
+            logger.warning(message)
             payment.error_message = message
             payment.save()
             raise exceptions.APIException(message)
