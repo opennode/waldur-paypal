@@ -48,6 +48,7 @@ class Payment(LoggableMixin, TimeStampedModel, UuidMixin, ErrorMessageMixin):
 
     customer = models.ForeignKey(Customer)
     amount = models.DecimalField(max_digits=9, decimal_places=2)
+    tax = models.DecimalField(max_digits=9, decimal_places=2, default=0)
 
     # Payment ID is persistent identifier of payment
     backend_id = models.CharField(max_length=255, null=True)
@@ -90,10 +91,19 @@ class Invoice(LoggableMixin, UuidMixin):
         customer_path = 'customer'
 
     customer = models.ForeignKey(Customer, related_name='paypal_invoices')
-    total_amount = models.DecimalField(max_digits=9, decimal_places=2)
     start_date = models.DateField()
     end_date = models.DateField()
     pdf = models.FileField(upload_to='paypal-invoices', blank=True, null=True)
+
+    @property
+    def total_amount(self):
+        """ Get total price of all items excluding VAT tax """
+        return sum(item.amount for item in self.items)
+
+    @property
+    def total_tax(self):
+        """ Get total price of all items' VAT tax """
+        return sum(item.tax for item in self.items)
 
     def get_log_fields(self):
         return ('uuid', 'customer', 'total_amount', 'start_date', 'end_date')
@@ -142,6 +152,7 @@ class InvoiceItem(models.Model):
 
     invoice = models.ForeignKey(Invoice, related_name='items')
     amount = models.DecimalField(max_digits=9, decimal_places=2)
+    tax = models.DecimalField(max_digits=9, decimal_places=2, default=0)
     description = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
     backend_id = models.CharField(max_length=255, blank=True, null=True)

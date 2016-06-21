@@ -49,15 +49,16 @@ class PaypalBackend(object):
             raise PayPalError('Unable to parse token from approval_url')
         return token[0]
 
-    def make_payment(self, total, subtotal, tax, description, return_url, cancel_url):
+    def make_payment(self, amount, tax, description, return_url, cancel_url):
         """
-        Make PayPal single using Express Checkout workflow.
-        :param total: Decimal value of payment including VAT tax
-        :param subtotal: Decimal value of payment without VAT tax
-        :param tax: Decimal value of VAT tax
-        :param description: Description of payment
-        :param return_url: Callback view URL for approved payment
-        :param cancel_url: Callback view URL for cancelled payment
+        Make PayPal payment using Express Checkout workflow.
+        https://developer.paypal.com/docs/api/payments/
+
+        :param amount: Decimal value of payment without VAT tax.
+        :param tax: Decimal value of VAT tax.
+        :param description: Description of payment.
+        :param return_url: Callback view URL for approved payment.
+        :param cancel_url: Callback view URL for cancelled payment.
         :return: Object containing backend payment id, approval URL and token.
         """
         payment = paypal.Payment({
@@ -66,10 +67,10 @@ class PaypalBackend(object):
             'transactions': [
                 {
                     'amount': {
-                        'total': str(total),  # serialize decimal
+                        'total': str(amount + tax),  # serialize decimal
                         'currency': self.currency_name,
                         'details': {
-                            'subtotal': str(subtotal),
+                            'subtotal': str(amount),
                             'tax': str(tax)
                         }
                     },
@@ -105,10 +106,18 @@ class PaypalBackend(object):
         except paypal.exceptions.ConnectionError as e:
             six.reraise(PayPalError, e)
 
-    def create_plan(self, amount, name, description, return_url, cancel_url):
+    def create_plan(self, amount, tax, name, description, return_url, cancel_url):
         """
-        Create and activate monthly billing plan using PayPal Rest API.
-        On success returns plan_id
+        Create and activate monthly billing plan.
+        https://developer.paypal.com/docs/api/payments.billing-plans
+
+        :param amount: Decimal value of plan payment for one month without VAT tax.
+        :param tax: Decimal value of VAT tax.
+        :param name: Name of the billing plan.
+        :param description: Description of the billing plan.
+        :param return_url: Callback view URL for approved billing plan.
+        :param cancel_url: Callback view URL for cancelled billing plan.
+        :return: Billing plan ID.
         """
         plan = paypal.BillingPlan({
             'name': name,
@@ -123,7 +132,16 @@ class PaypalBackend(object):
                 'amount': {
                     'currency': self.currency_name,
                     'value': str(amount)
-                }
+                },
+                'charge_models': [
+                    {
+                        'type': 'TAX',
+                        'amount': {
+                            'currency': self.currency_name,
+                            'value': str(tax)
+                        }
+                    }
+                ]
             }],
             'merchant_preferences': {
                 'return_url': return_url,

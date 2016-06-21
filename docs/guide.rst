@@ -1,5 +1,6 @@
 Configuration of integration with PayPal
-++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++
+
 First, you should obtain client_id and client_secret for PayPal REST API using `PayPal developer site <https://developer.paypal.com/webapps/developer/applications/myapps/>`_.
 
 To setup a PayPal integration, add a block of configuration as shown in the example below.
@@ -19,5 +20,6 @@ To setup a PayPal integration, add a block of configuration as shown in the exam
             'company': 'OpenNode',
             'bank': 'American Bank',
             'account': '123456789',
-        }
+        },
+        'STALE_PAYMENTS_LIFETIME': timedelta(weeks=1)
     }
