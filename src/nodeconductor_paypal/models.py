@@ -98,12 +98,12 @@ class Invoice(LoggableMixin, UuidMixin):
     @property
     def total_amount(self):
         """ Get total price of all items including VAT tax """
-        return sum(item.amount for item in self.items)
+        return sum(item.amount for item in self.items.all())
 
     @property
     def total_tax(self):
         """ Get total price of all items' VAT tax """
-        return sum(item.tax for item in self.items)
+        return sum(item.tax for item in self.items.all())
 
     @property
     def subtotal(self):
