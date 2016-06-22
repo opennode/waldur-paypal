@@ -59,9 +59,9 @@
             {% endfor %}
             <tr><td colspan="3" style="padding: 20px 0"><hr></td></tr>
             <tr style="font-size:20px">
-                <th align="right" colspan="3">Subtotal: {{ invoice.total_amount|floatformat:2|intcomma }} {{ currency }}</th>
+                <th align="right" colspan="3">Subtotal (excluding VAT): {{ invoice.subtotal|floatformat:2|intcomma }} {{ currency }}</th>
                 <th align="right" colspan="3">VAT: {{ invoice.total_tax|floatformat:2|intcomma }} {{ currency }}</th>
-                <th align="right" colspan="3">Total: {{ invoice.total_tax + invoice.total_amount |floatformat:2|intcomma }} {{ currency }}</th>
+                <th align="right" colspan="3">Total (including VAT): {{ invoice.total_amount |floatformat:2|intcomma }} {{ currency }}</th>
             </tr>
         </table>
 

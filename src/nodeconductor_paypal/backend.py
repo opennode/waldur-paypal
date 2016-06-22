@@ -54,24 +54,27 @@ class PaypalBackend(object):
         Make PayPal payment using Express Checkout workflow.
         https://developer.paypal.com/docs/api/payments/
 
-        :param amount: Decimal value of payment without VAT tax.
+        :param amount: Decimal value of payment including VAT tax.
         :param tax: Decimal value of VAT tax.
         :param description: Description of payment.
         :param return_url: Callback view URL for approved payment.
         :param cancel_url: Callback view URL for cancelled payment.
         :return: Object containing backend payment id, approval URL and token.
         """
+        if amount < tax:
+            raise PayPalError('Payment amount should be greater than tax.')
+
         payment = paypal.Payment({
             'intent': 'sale',
             'payer': {'payment_method': 'paypal'},
             'transactions': [
                 {
                     'amount': {
-                        'total': str(amount + tax),  # serialize decimal
+                        'total': self._format_decimal(amount),  # serialize decimal
                         'currency': self.currency_name,
                         'details': {
-                            'subtotal': str(amount),
-                            'tax': str(tax)
+                            'subtotal': self._format_decimal(amount - tax),
+                            'tax': self._format_decimal(tax)
                         }
                     },
                     'description': description
@@ -111,7 +114,7 @@ class PaypalBackend(object):
         Create and activate monthly billing plan.
         https://developer.paypal.com/docs/api/payments.billing-plans
 
-        :param amount: Decimal value of plan payment for one month without VAT tax.
+        :param amount: Decimal value of plan payment for one month including tax.
         :param tax: Decimal value of VAT tax.
         :param name: Name of the billing plan.
         :param description: Description of the billing plan.
@@ -119,6 +122,9 @@ class PaypalBackend(object):
         :param cancel_url: Callback view URL for cancelled billing plan.
         :return: Billing plan ID.
         """
+        if amount < tax:
+            raise PayPalError('Plan price should be greater than tax.')
+
         plan = paypal.BillingPlan({
             'name': name,
             'description': description,
@@ -131,14 +137,14 @@ class PaypalBackend(object):
                 'cycles': 0,
                 'amount': {
                     'currency': self.currency_name,
-                    'value': str(amount)
+                    'value': self._format_decimal(amount - tax)
                 },
                 'charge_models': [
                     {
                         'type': 'TAX',
                         'amount': {
                             'currency': self.currency_name,
-                            'value': str(tax)
+                            'value': self._format_decimal(tax)
                         }
                     }
                 ]
@@ -157,6 +163,12 @@ class PaypalBackend(object):
                 raise PayPalError(plan.error)
         except paypal.exceptions.ConnectionError as e:
             six.reraise(PayPalError, e)
+
+    def _format_decimal(self, value):
+        """
+        PayPal API expects at most two decimal places with a period separator.
+        """
+        return "%.2f" % value
 
     def create_agreement(self, plan_id, name):
         """
