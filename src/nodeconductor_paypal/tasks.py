@@ -2,9 +2,11 @@ import logging
 from datetime import timedelta, datetime
 
 from celery import shared_task
+from django.conf import settings
+from django.utils import timezone
 
 from nodeconductor.structure import SupportedServices
-from .models import Invoice
+from .models import Invoice, Payment
 
 logger = logging.getLogger(__name__)
 
@@ -24,9 +26,7 @@ def debit_customers():
     # XXX: it's just a placeholder, it doesn't work properly now nor implemented anyhow
     #      perhaps it should merely use price estimates..
 
-    # TODO: remove once iaas has been deprecated
-    from nodeconductor.iaas.models import Instance
-    models = filter(lambda model: model != Instance, SupportedServices.get_resource_models().values())
+    models = SupportedServices.get_resource_models().values()
 
     for model in models:
         resources = model.objects.filter(
@@ -50,3 +50,9 @@ def generate_invoice_pdf(invoice_id):
         return
 
     invoice.generate_pdf()
+
+
+@shared_task(name='nodeconductor.paypal.payments_cleanup')
+def payments_cleanup():
+    timespan = settings.NODECONDUCTOR_PAYPAL.get('STALE_PAYMENTS_LIFETIME', timedelta(weeks=1))
+    Payment.objects.filter(state=Payment.States.CREATED, created__lte=timezone.now() - timespan).delete()

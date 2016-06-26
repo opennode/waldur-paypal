@@ -19,6 +19,9 @@ from .models import Payment, Invoice
 from .serializers import PaymentSerializer, PaymentApproveSerializer, InvoiceSerializer, PaymentCancelSerializer
 
 
+logger = logging.getLogger(__name__)
+
+
 class CreateByStaffOrOwnerMixin(object):
 
     def create(self, request):
@@ -59,13 +62,12 @@ class PaymentView(CreateByStaffOrOwnerMixin,
         return_url = serializer.validated_data.pop('return_url')
         cancel_url = serializer.validated_data.pop('cancel_url')
 
-        customer = serializer.validated_data['customer']
         payment = serializer.save()
 
         try:
             backend_payment = PaypalBackend().make_payment(
-                amount=serializer.validated_data['amount'],
-                description='Replenish account in NodeConductor for %s' % customer.name,
+                payment.amount, payment.tax,
+                description='Replenish account in NodeConductor for %s' % payment.customer.name,
                 return_url=return_url,
                 cancel_url=cancel_url)
 
@@ -85,7 +87,7 @@ class PaymentView(CreateByStaffOrOwnerMixin,
 
         except PayPalError as e:
             message = 'Unable to create payment because of backend error %s' % e
-            logging.warning(message)
+            logger.warning(message)
             payment.set_erred()
             payment.error_message = message
             payment.save()
@@ -141,7 +143,7 @@ class PaymentView(CreateByStaffOrOwnerMixin,
 
         except PayPalError as e:
             message = 'Unable to approve payment because of backend error %s' % e
-            logging.warning(message)
+            logger.warning(message)
             payment.error_message = message
             payment.save()
             raise exceptions.APIException(message)

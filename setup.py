@@ -8,32 +8,16 @@ dev_requires = [
 ]
 
 install_requires = [
-    'nodeconductor>=0.91.0',
+    'nodeconductor>=0.102.0',
     'paypalrestsdk>=1.10.0',
     'xhtml2pdf>=0.0.6',
+    'Pillow>=2.0.0,<3.0.0',
 ]
-
-
-# RPM installation does not need oslo, cliff and stevedore libs -
-# they are required only for installation with setuptools
-try:
-    action = sys.argv[1]
-except IndexError:
-    pass
-else:
-    if action in ['develop', 'install', 'test', 'bdist_egg']:
-        install_requires += [
-            'cliff==1.7.0',
-            'oslo.config==1.4.0',
-            'oslo.i18n==1.0.0',
-            'oslo.utils==1.0.0',
-            'stevedore==1.0.0',
-        ]
 
 
 setup(
     name='nodeconductor-paypal',
-    version='0.3.5',
+    version='0.4.0',
     author='OpenNode Team',
     author_email='info@opennodecloud.com',
     url='http://nodeconductor.com',

@@ -1,9 +1,16 @@
+from decimal import Decimal
+import logging
+
 from rest_framework import serializers
 from rest_framework.reverse import reverse
 
 from nodeconductor.core import serializers as core_serializers
+from nodeconductor.structure.models import VATException
 
 from .models import Payment, Invoice, InvoiceItem
+
+
+logger = logging.getLogger(__name__)
 
 
 class PaymentSerializer(core_serializers.AugmentedSerializerMixin,
@@ -19,16 +26,30 @@ class PaymentSerializer(core_serializers.AugmentedSerializerMixin,
 
         fields = (
             'url', 'uuid', 'created', 'modified', 'state',
-            'amount', 'customer', 'return_url', 'cancel_url', 'approval_url', 'error_message'
+            'amount', 'customer', 'return_url', 'cancel_url', 'approval_url', 'error_message', 'tax'
         )
 
-        read_only_fields = ('approval_url', 'error_message')
+        read_only_fields = ('approval_url', 'error_message', 'tax')
         protected_fields = ('customer', 'amount', 'return_url', 'cancel_url')
 
         extra_kwargs = {
             'url': {'lookup_field': 'uuid', 'view_name': 'paypal-payment-detail'},
             'customer': {'lookup_field': 'uuid', 'view_name': 'customer-detail'},
         }
+
+    def create(self, validated_data):
+        customer = validated_data['customer']
+        amount = validated_data['amount']
+
+        try:
+            rate = customer.get_vat_rate() or 0
+        except (NotImplemented, VATException) as e:
+            rate = 0
+            logger.warning('Unable to compute VAT rate for customer with UUID %s, error is %s',
+                           customer.uuid, e)
+        validated_data['tax'] = Decimal(rate) / Decimal(100) * amount
+
+        return super(PaymentSerializer, self).create(validated_data)
 
 
 class PaymentApproveSerializer(serializers.Serializer):
