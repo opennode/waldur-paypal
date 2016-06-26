@@ -3,11 +3,11 @@ Summary: PayPal plugin for NodeConductor
 Group: Development/Libraries
 Version: 0.3.5
 Release: 1.el7
-License: Copyright 2015 OpenNode LLC. All rights reserved.
+License: Copyright 2016 OpenNode LLC. All rights reserved.
 Url: http://nodeconductor.com
 Source0: %{name}-%{version}.tar.gz
 
-Requires: nodeconductor >= 0.79.0
+Requires: nodeconductor >= 0.102.0
 Requires: python-paypal-rest-sdk >= 1.10.0
 Requires: python-xhtml2pdf >= 0.0.6
 

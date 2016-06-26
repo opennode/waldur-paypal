@@ -37,4 +37,5 @@ class Command(BaseCommand):
                 invoice=invoice,
                 description='Monthly fee for premium plan',
                 amount=amount,
+                tax=amount/10.0,
                 created_at=start_date)
