@@ -1,5 +1,6 @@
 import django_filters
 
+from nodeconductor.core.filters import UUIDFilter
 from . import models
 
 
@@ -8,7 +9,7 @@ class PaymentFilter(django_filters.FilterSet):
         model = models.Payment
         fields = ('customer',)
 
-    customer = django_filters.CharFilter(
+    customer = UUIDFilter(
         name='customer__uuid',
         distinct=True,
     )
@@ -19,7 +20,7 @@ class InvoiceFilter(django_filters.FilterSet):
         model = models.Invoice
         fields = ('customer',)
 
-    customer = django_filters.CharFilter(
+    customer = UUIDFilter(
         name='customer__uuid',
         distinct=True,
     )
