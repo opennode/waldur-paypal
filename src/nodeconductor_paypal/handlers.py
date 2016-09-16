@@ -1,4 +1,11 @@
+import logging
+
+from nodeconductor.logging import models as logging_models
+
 from .log import event_logger
+
+
+logger = logging.getLogger(__name__)
 
 
 def log_invoice_save(sender, instance, created=False, **kwargs):
@@ -25,3 +32,18 @@ def log_invoice_delete(sender, instance, **kwargs):
         event_context={
             'invoice': instance,
         })
+
+
+def add_email_hooks_to_user(sender, instance, created, **kwargs):
+    if not created:
+        return
+    event_types = ['invoice_creation_succeeded', 'payment_creation_succeeded',
+                   'payment_approval_succeeded', 'payment_cancel_succeeded']
+    user = instance
+    if not user.email:
+        logger.error('Cannot add default email hooks to user %s (PK: %s). He does not have email.')
+    logging_models.EmailHook.objects.create(
+        user=user,
+        event_types=event_types,
+        email=user.email,
+    )

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import sys
 from setuptools import setup, find_packages
 
 
@@ -8,16 +7,17 @@ dev_requires = [
 ]
 
 install_requires = [
-    'nodeconductor>=0.102.0',
+    'nodeconductor>=0.107.0',
     'paypalrestsdk>=1.10.0',
-    'xhtml2pdf>=0.0.6',
+    'xhtml2pdf>=0.0.6,<0.1b2',
+    'html5lib<0.99999999',
     'Pillow>=2.0.0,<3.0.0',
 ]
 
 
 setup(
     name='nodeconductor-paypal',
-    version='0.4.0',
+    version='0.5.0',
     author='OpenNode Team',
     author_email='info@opennodecloud.com',
     url='http://nodeconductor.com',
@@ -42,6 +42,6 @@ setup(
         'Intended Audience :: Developers',
         'Intended Audience :: System Administrators',
         'Operating System :: OS Independent',
-        'License :: OSI Approved :: Apache Software License',
+        'License :: OSI Approved :: MIT License',
     ],
 )
