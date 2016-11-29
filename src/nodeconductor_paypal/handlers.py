@@ -41,8 +41,8 @@ def add_email_hooks_to_user(sender, instance, created, **kwargs):
                    'payment_approval_succeeded', 'payment_cancel_succeeded']
     user = instance
     if not user.email:
-        logger.error('Cannot add default email hooks to user %s (PK: %s). He does not have email.',
-                     user, user.pk)
+        logger.warn('Cannot add default email hooks to user %s (PK: %s). He does not have email.', user, user.pk)
+
     logging_models.EmailHook.objects.create(
         user=user,
         event_types=event_types,
