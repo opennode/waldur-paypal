@@ -4,7 +4,7 @@ from django.core.urlresolvers import reverse
 
 from nodeconductor.structure.tests import factories as structure_factories
 
-from .. import models
+from nodeconductor_paypal import models
 
 
 class PaypalPaymentFactory(factory.DjangoModelFactory):
@@ -20,9 +20,9 @@ class PaypalPaymentFactory(factory.DjangoModelFactory):
     def get_url(self, payment=None, action=None):
         if payment is None:
             payment = PaypalPaymentFactory()
-        url = reverse('paypal-payment-detail', kwargs={'uuid': payment.uuid})
+        url = 'http://testserver' + reverse('paypal-payment-detail', kwargs={'uuid': payment.uuid})
         return url if action is None else url + action + '/'
 
     @classmethod
     def get_list_url(cls):
-        return reverse('paypal-payment-list')
+        return 'http://testserver' + reverse('paypal-payment-list')

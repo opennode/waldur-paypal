@@ -1,10 +1,10 @@
 import logging
 
 from django.contrib import admin
-from django.utils.translation import ungettext
+from django.utils.translation import ugettext_lazy as _
 
 from nodeconductor.core.tasks import send_task
-from .models import Invoice, Payment
+from . import models
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ class InvoiceAdmin(admin.ModelAdmin):
             send_task('paypal', 'generate_invoice_pdf')(invoice.id)
 
         tasks_scheduled = queryset.count()
-        message = ungettext(
+        message = _(
             'Scheduled generation of PDF for one invoice.',
             'Scheduled generation of PDF for %(tasks_scheduled)d invoice.',
             tasks_scheduled
@@ -35,5 +35,5 @@ class InvoiceAdmin(admin.ModelAdmin):
 class PaymentAdmin(admin.ModelAdmin):
     list_display = ['customer', 'amount', 'state', 'backend_id']
 
-admin.site.register(Invoice, InvoiceAdmin)
-admin.site.register(Payment, PaymentAdmin)
+admin.site.register(models.Invoice, InvoiceAdmin)
+admin.site.register(models.Payment, PaymentAdmin)
