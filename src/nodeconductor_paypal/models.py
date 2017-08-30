@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 @python_2_unicode_compatible
 class Payment(LoggableMixin, TimeStampedModel, UuidMixin, ErrorMessageMixin):
-    class Meta:
+    class Meta(object):
         ordering = ['-modified']
 
     class Permissions(object):
@@ -62,6 +62,10 @@ class Payment(LoggableMixin, TimeStampedModel, UuidMixin, ErrorMessageMixin):
     def __str__(self):
         return "%s %.2f %s" % (self.modified, self.amount, self.customer.name)
 
+    @classmethod
+    def get_url_name(cls):
+        return 'paypal-payment'
+
     def get_log_fields(self):
         return ('uuid', 'customer', 'amount', 'modified', 'status')
 
@@ -84,7 +88,7 @@ class Payment(LoggableMixin, TimeStampedModel, UuidMixin, ErrorMessageMixin):
 
 @python_2_unicode_compatible
 class Invoice(LoggableMixin, UuidMixin):
-    class Meta:
+    class Meta(object):
         ordering = ['-start_date']
 
     class Permissions(object):
@@ -94,6 +98,10 @@ class Invoice(LoggableMixin, UuidMixin):
     start_date = models.DateField()
     end_date = models.DateField()
     pdf = models.FileField(upload_to='paypal-invoices', blank=True, null=True)
+
+    @classmethod
+    def get_url_name(cls):
+        return 'paypal-invoice'
 
     @property
     def total_amount(self):
@@ -152,7 +160,7 @@ class InvoiceItem(models.Model):
     """
     Invoice item corresponds to transaction of payment or billing plan agreement
     """
-    class Meta:
+    class Meta(object):
         ordering = ['invoice', '-created_at']
 
     invoice = models.ForeignKey(Invoice, related_name='items')

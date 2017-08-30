@@ -3,14 +3,14 @@ import logging
 from django.conf import settings
 from django.views.static import serve
 from django_fsm import TransitionNotAllowed
+from django.utils.translation import ugettext_lazy as _
 
-from rest_framework import mixins, viewsets, permissions, decorators, exceptions, status
+from rest_framework import viewsets, decorators, exceptions, status
 from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
-from rest_framework.filters import DjangoFilterBackend
 
-from nodeconductor.structure.filters import GenericRoleFilter
-from nodeconductor.structure.models import CustomerRole
+from nodeconductor.core import views as core_views
+from nodeconductor.structure import permissions as structure_permissions
 
 from .backend import PaypalBackend, PayPalError
 from .filters import InvoiceFilter, PaymentFilter
@@ -22,37 +22,37 @@ from .serializers import PaymentSerializer, PaymentApproveSerializer, InvoiceSer
 logger = logging.getLogger(__name__)
 
 
+class ExtensionDisabled(exceptions.APIException):
+    status_code = status.HTTP_424_FAILED_DEPENDENCY
+    default_detail = _('PayPal extension is disabled.')
+
+
+class CheckExtensionMixin(object):
+    """ Raise exception if paypal extension is disabled """
+
+    def initial(self, request, *args, **kwargs):
+        if not settings.NODECONDUCTOR_PAYPAL['ENABLED']:
+            raise ExtensionDisabled()
+        return super(CheckExtensionMixin, self).initial(request, *args, **kwargs)
+
+
 class CreateByStaffOrOwnerMixin(object):
 
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
         customer = serializer.validated_data['customer']
-
-        if not self.request.user.is_staff and not customer.has_user(self.request.user, CustomerRole.OWNER):
+        if not structure_permissions._has_owner_access(request.user, customer):
             raise exceptions.PermissionDenied()
+
         return super(CreateByStaffOrOwnerMixin, self).create(request)
 
 
-class PaymentView(CreateByStaffOrOwnerMixin,
-                  mixins.CreateModelMixin,
-                  mixins.ListModelMixin,
-                  mixins.RetrieveModelMixin,
-                  viewsets.GenericViewSet):
-
+class PaymentView(CheckExtensionMixin, CreateByStaffOrOwnerMixin, core_views.ProtectedViewSet):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
     lookup_field = 'uuid'
-    filter_backends = (
-        GenericRoleFilter,
-        DjangoFilterBackend
-    )
     filter_class = PaymentFilter
-    permission_classes = (
-        permissions.IsAuthenticated,
-        permissions.DjangoObjectPermissions,
-    )
 
     def perform_create(self, serializer):
         """
@@ -107,8 +107,7 @@ class PaymentView(CreateByStaffOrOwnerMixin,
         except Payment.DoesNotExist:
             raise NotFound(error_message)
 
-        is_owner = payment.customer.has_user(self.request.user, CustomerRole.OWNER)
-        if not self.request.user.is_staff and not is_owner:
+        if not structure_permissions._has_owner_access(self.request.user, payment.customer):
             raise NotFound(error_message)
 
         return payment
@@ -153,8 +152,7 @@ class PaymentView(CreateByStaffOrOwnerMixin,
             payment.set_erred()
             payment.error_message = message
             payment.save()
-            return Response({'detail': message},
-                            status=status.HTTP_409_CONFLICT)
+            return Response({'detail': message}, status=status.HTTP_409_CONFLICT)
 
     @decorators.list_route(methods=['POST'])
     def cancel(self, request):
@@ -183,19 +181,11 @@ class PaymentView(CreateByStaffOrOwnerMixin,
                             status=status.HTTP_409_CONFLICT)
 
 
-class InvoicesViewSet(viewsets.ReadOnlyModelViewSet):
+class InvoicesViewSet(CheckExtensionMixin, viewsets.ReadOnlyModelViewSet):
     queryset = Invoice.objects.all()
     serializer_class = InvoiceSerializer
     lookup_field = 'uuid'
-    filter_backends = (
-        GenericRoleFilter,
-        DjangoFilterBackend
-    )
     filter_class = InvoiceFilter
-    permission_classes = (
-        permissions.IsAuthenticated,
-        permissions.DjangoObjectPermissions,
-    )
 
     def _serve_pdf(self, request, pdf):
         if not pdf:

@@ -7,8 +7,9 @@ from nodeconductor.core import NodeConductorExtension
 
 class PayPalExtension(NodeConductorExtension):
 
-    class Settings:
+    class Settings(object):
         NODECONDUCTOR_PAYPAL = {
+            'ENABLED': True,
             'BACKEND': {
                 'mode': 'sandbox',
                 'client_id': '',
@@ -35,16 +36,18 @@ class PayPalExtension(NodeConductorExtension):
 
     @staticmethod
     def celery_tasks():
-        from celery.schedules import crontab
-        return {
-            'debit-customers': {
-                'task': 'nodeconductor.paypal.debit_customers',
-                'schedule': crontab(hour=0, minute=30),
-                'args': (),
-            },
-            'payments-cleanup': {
-                'task': 'nodeconductor.paypal.payments_cleanup',
-                'schedule': timedelta(hours=24),
-                'args': (),
-            }
-        }
+        return {}
+        # from celery.schedules import crontab
+        # TODO [TM:8/30/17] Payments do not work at the moment until new payment flow is implemented
+        # {
+        #     'debit-customers': {
+        #         'task': 'paypal.DebigCustomers',
+        #         'schedule': crontab(hour=0, minute=30),
+        #         'args': (),
+        #     },
+        #     'payments-cleanup': {
+        #         'task': 'paypal.PaymentsCleanUp',
+        #         'schedule': timedelta(hours=24),
+        #         'args': (),
+        #     }
+        # }
