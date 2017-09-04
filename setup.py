@@ -9,9 +9,6 @@ dev_requires = [
 install_requires = [
     'nodeconductor>=0.107.0',
     'paypalrestsdk>=1.10.0,<2.0',
-    'xhtml2pdf>=0.0.6,<0.1b2',
-    'html5lib<0.99999999',
-    'Pillow>=2.0.0,<3.0.0',
 ]
 
 
@@ -24,7 +21,7 @@ setup(
     description='NodeConductor PayPal allows to make payments via PayPal',
     long_description=open('README.rst').read(),
     package_dir={'': 'src'},
-    packages=find_packages('src', exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
+    packages=find_packages('src'),
     install_requires=install_requires,
     zip_safe=False,
     extras_require={

@@ -7,12 +7,13 @@ from rest_framework import test, status
 from nodeconductor.structure import models as structure_models
 from nodeconductor.structure.tests import fixtures as structure_fixtures, factories as structure_factories
 from nodeconductor_paypal.backend import PaypalPayment, PayPalError
-from nodeconductor_paypal.models import Payment
 from nodeconductor_paypal.helpers import override_paypal_settings
+from nodeconductor_paypal.models import Payment
 
 from .factories import PaypalPaymentFactory
 
 
+@override_paypal_settings(ENABLED=True)
 class BasePaymentTest(test.APITransactionTestCase):
 
     def setUp(self):
@@ -72,7 +73,6 @@ class PaymentCreateTest(BasePaymentTest):
         self.assertEqual(response.status_code, status.HTTP_424_FAILED_DEPENDENCY)
 
 
-@unittest.skip("Payment model is not ready yet")
 class PaymentApprovalTest(BasePaymentTest):
 
     def approve_payment(self, user, amount=None, fail=False):
@@ -99,21 +99,9 @@ class PaymentApprovalTest(BasePaymentTest):
         response = self.approve_payment(self.fixture.owner)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
 
-    def test_if_payment_approved_balance_is_increased(self):
-        self.approve_payment(self.fixture.owner, 10.0)
-        customer = structure_models.Customer.objects.get(id=self.customer.id)
-        self.assertEqual(customer.balance, self.customer.balance + 10.0)
-
     def test_user_can_not_approve_payment_for_other_customer(self):
         response = self.approve_payment(self.other)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
-    def test_if_backend_fails_balance_is_not_increased(self):
-        response = self.approve_payment(self.fixture.owner, fail=True)
-        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-        customer = structure_models.Customer.objects.get(id=self.customer.id)
-        self.assertEqual(customer.balance, self.customer.balance)
 
 
 class PaymentCancellationTest(BasePaymentTest):
@@ -125,11 +113,11 @@ class PaymentCancellationTest(BasePaymentTest):
             'token': payment.token
         })
 
-    def ttest_staff_can_cancel_any_payment(self):
+    def test_staff_can_cancel_any_payment(self):
         response = self.cancel_payment(self.fixture.staff)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
 
-    def ttest_user_can_cancel_payment_for_owned_customer(self):
+    def test_user_can_cancel_payment_for_owned_customer(self):
         response = self.cancel_payment(self.fixture.owner)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 

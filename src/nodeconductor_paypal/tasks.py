@@ -1,13 +1,13 @@
 import logging
 from datetime import timedelta, datetime
 
-from celery import shared_task
 from django.conf import settings
 from django.utils import timezone
 
 from nodeconductor.core import tasks as core_tasks
 from nodeconductor.structure import SupportedServices
-from .models import Invoice, Payment
+
+from . import models, executors
 
 logger = logging.getLogger(__name__)
 
@@ -46,18 +46,6 @@ class DebigCustomers(core_tasks.BackgroundTask):
                     resource.customer.debit_account(data['total_amount'])
 
 
-@shared_task(name='nodeconductor.paypal.generate_invoice_pdf')
-def generate_invoice_pdf(invoice_id):
-    # TODO [TM:8/30/17] remove in WAL-1119
-    try:
-        invoice = Invoice.objects.get(pk=invoice_id)
-    except Invoice.DoesNotExist:
-        logger.warning('Missing invoice with id %s', invoice.id)
-        return
-
-    invoice.generate_pdf()
-
-
 class PaymentsCleanUp(core_tasks.BackgroundTask):
     name = 'paypal.PaymentsCleanUp'
 
@@ -66,4 +54,17 @@ class PaymentsCleanUp(core_tasks.BackgroundTask):
 
     def run(self):
         timespan = settings.NODECONDUCTOR_PAYPAL.get('STALE_PAYMENTS_LIFETIME', timedelta(weeks=1))
-        Payment.objects.filter(state=Payment.States.CREATED, created__lte=timezone.now() - timespan).delete()
+        models.Payment.objects.filter(state=models.Payment.States.CREATED, created__lte=timezone.now() - timespan).delete()
+
+
+class SendInvoices(core_tasks.BackgroundTask):
+    name = 'paypal.SendInvoices'
+
+    def is_equal(self, other_task, *args, **kwargs):
+        return self.name == other_task.get('name')
+
+    def run(self):
+        new_invoices = models.Invoice.objects.filter(backend_id='')
+
+        for invoice in new_invoices.iterator():
+            executors.InvoiceCreateExecutor.execute(invoice)

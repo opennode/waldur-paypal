@@ -128,7 +128,6 @@ class PaymentView(CheckExtensionMixin, CreateByStaffOrOwnerMixin, core_views.Pro
         try:
             PaypalBackend().approve_payment(payment_id, payer_id)
 
-            payment.customer.credit_account(payment.amount)
             payment.set_approved()
             payment.error_message = ''
             payment.save()

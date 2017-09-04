@@ -65,7 +65,7 @@ class PaymentCancelSerializer(serializers.Serializer):
 class InvoiceItemSerializer(serializers.ModelSerializer):
     class Meta(object):
         model = InvoiceItem
-        fields = ('amount', 'description', 'created_at')
+        fields = ('price', 'tax', 'unit_price', 'quantity', 'unit_of_measure', 'name', 'start', 'end')
 
 
 class InvoiceSerializer(core_serializers.AugmentedSerializerMixin,
@@ -77,8 +77,8 @@ class InvoiceSerializer(core_serializers.AugmentedSerializerMixin,
     class Meta(object):
         model = Invoice
         fields = (
-            'url', 'uuid', 'total_amount', 'pdf',
-            'start_date', 'end_date', 'items',
+            'url', 'uuid', 'total', 'price', 'tax', 'pdf', 'backend_id',
+            'start_date', 'end_date', 'state', 'items',
             'customer', 'customer_uuid', 'customer_name'
         )
         related_paths = ('customer',)

@@ -1,10 +1,12 @@
 import datetime
-import decimal
-import urlparse
 import dateutil.parser
+import decimal
 import paypalrestsdk as paypal
+import urlparse
+import urllib2
 
 from django.conf import settings
+from django.core.files.base import ContentFile
 from django.utils import six, timezone
 
 
@@ -49,6 +51,100 @@ class PaypalBackend(object):
             raise PayPalError('Unable to parse token from approval_url')
         return token[0]
 
+    def create_invoice(self, invoice):
+        """
+        Creates invoice with invoice items in it.
+        https://developer.paypal.com/docs/api/invoicing/#definition-payment_term
+        :param invoice: instance of Invoice class.
+        :return: instance of Invoice with backend_id filled.
+        """
+
+        if invoice.backend_id:
+            return
+
+        phone = invoice.issuer_details.get('phone', {})
+        if not phone:
+            raise PayPalError('"phone" is a required attribute')
+
+        if phone and 'country_code' not in phone:
+            raise PayPalError('"phone"."country_code" is a required attribute')
+
+        if phone and 'national_number' not in phone:
+            raise PayPalError('"phone"."national_number" is a required attribute')
+
+        invoice_details = {
+            'merchant_info': {
+                'email': invoice.issuer_details.get('email'),
+                'business_name': invoice.issuer_details.get('company'),
+                'phone': {
+                    'country_code': phone.get('country_code'),
+                    'national_number': phone.get('national_number'),
+                },
+                'address': {
+                    'line1': invoice.issuer_details.get('address'),
+                    'city': invoice.issuer_details.get('city'),
+                    'state': invoice.issuer_details.get('state'),
+                    'postal_code': invoice.issuer_details.get('email'),
+                    'country_code': invoice.issuer_details.get('country_code')
+                }
+            },
+            'items': [
+                {
+                    'name': item.name,
+                    'unit_of_measure': item.unit_of_measure,
+                    'quantity': item.quantity,
+                    # fill tax only if it is available.
+                    'tax': {
+                        'name': 'VAT',
+                        'percent': self._format_decimal(invoice.tax_percent),
+                    },
+                    'date': self._format_date(item.start.date()),
+                    'unit_price': {
+                        'currency': self.currency_name,
+                        'value': self._format_decimal(item.unit_price),
+                    }
+                } for item in invoice.items.iterator()
+            ],
+            'tax_inclusive': False,
+            'payment_term': {
+                'due_date': self._format_date(invoice.end_date),
+            },
+            'total_amount': {
+                'currency': self.currency_name,
+                'value': self._format_decimal(invoice.total)
+            }
+            # 'logo_url': pass logo url if needed. 250x90, HTTPS. Image is not displayed o PDF atm.
+        }
+
+        if hasattr(invoice.customer, 'payment_details'):
+            payment_details = invoice.customer.payment_details
+            invoice_details['billing_info'] = [
+                {
+                    'email': payment_details.email,
+                    'business_name': payment_details.company,
+                }
+            ]
+        else:
+            invoice_details['billing_info'] = [
+                {
+                    'email': invoice.customer.email,
+                }
+            ]
+
+        backend_invoice = paypal.Invoice(invoice_details)
+
+        try:
+            if backend_invoice.create():
+                invoice.state = backend_invoice.status
+                invoice.backend_id = backend_invoice.id
+                invoice.save(update_fields=['state', 'backend_id'])
+
+                return invoice
+            else:
+                raise PayPalError(backend_invoice.error)
+        except paypal.exceptions.ConnectionError as e:
+            six.reraise(PayPalError, e)
+
     def make_payment(self, amount, tax, description, return_url, cancel_url):
         """
         Make PayPal payment using Express Checkout workflow.
@@ -70,7 +166,7 @@ class PaypalBackend(object):
             'transactions': [
                 {
                     'amount': {
-                        'total': self._format_decimal(amount),  # serialize decimal
+                        'total': self._format_decimal(amount),
                         'currency': self.currency_name,
                         'details': {
                             'subtotal': self._format_decimal(amount - tax),
@@ -169,6 +265,13 @@ class PaypalBackend(object):
         PayPal API expects at most two decimal places with a period separator.
         """
         return "%.2f" % value
+
+    def _format_date(self, date):
+        """
+        PayPal API expects date to be in the next format yyyy-MM-dd z. 'z' stands for - date must to be in UTC.
+        At the moment timezone is ignored as only days of resources usage are counted, not hours.
+        """
+        return date.strftime('%Y-%m-%d UTC')
 
     def create_agreement(self, plan_id, name):
         """
@@ -273,3 +376,16 @@ class PaypalBackend(object):
 
         except paypal.exceptions.ConnectionError as e:
             six.reraise(PayPalError, e)
+
+    def download_invoice_pdf(self, invoice):
+        if not invoice.backend_id:
+            raise PayPalError('Invoice for date %s and customer %s could not be found' % (
+                invoice.start_date.strftime('%Y-%m-%d'),
+                invoice.customer.name,
+            ))
+
+        paypal_template = settings.NODECONDUCTOR_PAYPAL['INVOICE']['template']
+        invoice_url = paypal_template % {'invoice_id': invoice.backend_id}
+        response = urllib2.urlopen(invoice_url)
+        content = response.read()
+        invoice.pdf.save(invoice.file_name, ContentFile(content), save=True)
