@@ -270,7 +270,6 @@ class PaypalBackend(object):
 
     def _format_date(self, date):
         """
-        PayPal API expects date to be in the next format yyyy-MM-dd z. 'z' stands for - date must to be in UTC.
         At the moment timezone is ignored as only days of resources usage are counted, not hours.
         """
         return date.strftime('%Y-%m-%d UTC')
