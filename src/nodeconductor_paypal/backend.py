@@ -93,11 +93,6 @@ class PaypalBackend(object):
                     'name': item.name,
                     'unit_of_measure': item.unit_of_measure,
                     'quantity': item.quantity,
-                    # fill tax only if it is available.
-                    'tax': {
-                        'name': 'VAT',
-                        'percent': self._format_decimal(invoice.tax_percent),
-                    },
                     'date': self._format_date(item.start.date()),
                     'unit_price': {
                         'currency': self.currency_name,
@@ -115,6 +110,13 @@ class PaypalBackend(object):
             }
             # 'logo_url': pass logo url if needed. 250x90, HTTPS. Image is not displayed o PDF atm.
         }
+
+        if invoice.tax_percent and invoice.tax_percent > 0:
+            for item in invoice_details['items']:
+                item['tax'] = {
+                    'name': 'VAT',
+                    'percent': self._format_decimal(invoice.tax_percent),
+                }
 
         if hasattr(invoice.customer, 'payment_details'):
             payment_details = invoice.customer.payment_details

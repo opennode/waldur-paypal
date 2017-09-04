@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class InvoiceAdmin(structure_admin.BackendModelAdmin):
-    list_display = ['customer', 'state', 'start_date', 'end_date', 'issuer_details', 'tax_percent', 'backend_id']
+    list_display = ['customer', 'state', 'start_date', 'end_date', 'tax_percent', 'backend_id']
     actions = ['download_invoice_pdf', 'create_invoice']
 
     class CreateInvoice(ExecutorAdminAction):
