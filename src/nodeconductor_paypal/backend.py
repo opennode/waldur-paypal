@@ -387,6 +387,6 @@ class PaypalBackend(object):
 
         paypal_template = settings.NODECONDUCTOR_PAYPAL['INVOICE']['template']
         invoice_url = paypal_template % {'invoice_id': invoice.backend_id}
-        response = urllib2.urlopen(invoice_url)
+        response = urllib2.urlopen(invoice_url) # nosec
         content = response.read()
         invoice.pdf.save(invoice.file_name, ContentFile(content), save=True)
