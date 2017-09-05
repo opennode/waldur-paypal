@@ -24,7 +24,7 @@ class PaypalPayment(object):
 class PaypalBackend(object):
 
     def __init__(self):
-        config = settings.NODECONDUCTOR_PAYPAL['BACKEND']
+        config = settings.WALDUR_PAYPAL['BACKEND']
         self.configure(**config)
 
     def configure(self, mode, client_id, client_secret, currency_name, **kwargs):
@@ -385,7 +385,7 @@ class PaypalBackend(object):
                 invoice.customer.name,
             ))
 
-        paypal_template = settings.NODECONDUCTOR_PAYPAL['INVOICE']['template']
+        paypal_template = settings.WALDUR_PAYPAL['INVOICE']['template']
         invoice_url = paypal_template % {'invoice_id': invoice.backend_id}
         response = urllib2.urlopen(invoice_url) # nosec
         content = response.read()

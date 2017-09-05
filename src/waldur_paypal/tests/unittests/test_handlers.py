@@ -4,7 +4,7 @@ import mock
 from django.test import TestCase
 from django.utils import timezone
 
-from nodeconductor_paypal import handlers, models
+from waldur_paypal import handlers, models
 
 from .. import fixtures
 

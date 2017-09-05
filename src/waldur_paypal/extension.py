@@ -8,7 +8,7 @@ from nodeconductor.core import NodeConductorExtension
 class PayPalExtension(NodeConductorExtension):
 
     class Settings(object):
-        NODECONDUCTOR_PAYPAL = {
+        WALDUR_PAYPAL = {
             'ENABLED': False,
             'BACKEND': {
                 'mode': 'sandbox',
@@ -24,7 +24,7 @@ class PayPalExtension(NodeConductorExtension):
 
     @staticmethod
     def django_app():
-        return 'nodeconductor_paypal'
+        return 'waldur_paypal'
 
     @staticmethod
     def rest_urls():
@@ -36,17 +36,17 @@ class PayPalExtension(NodeConductorExtension):
         from celery.schedules import crontab
         return {
             'debit-customers': {
-                'task': 'paypal.DebitCustomers',
+                'task': 'waldur_paypal.DebitCustomers',
                 'schedule': crontab(hour=0, minute=30),
                 'args': (),
             },
             'payments-cleanup': {
-                'task': 'paypal.PaymentsCleanUp',
+                'task': 'waldur_paypal.PaymentsCleanUp',
                 'schedule': timedelta(hours=24),
                 'args': (),
             },
             'send-invoices': {
-                'task': 'paypal.SendInvoices',
+                'task': 'waldur_paypal.SendInvoices',
                 'schedule': timedelta(hours=24),
                 'args': (),
             }

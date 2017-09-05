@@ -31,7 +31,7 @@ class CheckExtensionMixin(object):
     """ Raise exception if paypal extension is disabled """
 
     def initial(self, request, *args, **kwargs):
-        if not settings.NODECONDUCTOR_PAYPAL['ENABLED']:
+        if not settings.WALDUR_PAYPAL['ENABLED']:
             raise ExtensionDisabled()
         return super(CheckExtensionMixin, self).initial(request, *args, **kwargs)
 
