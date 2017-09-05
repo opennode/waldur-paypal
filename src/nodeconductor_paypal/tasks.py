@@ -12,13 +12,13 @@ from . import models, executors
 logger = logging.getLogger(__name__)
 
 
-class DebigCustomers(core_tasks.BackgroundTask):
+class DebitCustomers(core_tasks.BackgroundTask):
     """ Fetch a list of shared services (services based on shared settings).
         Calculate the amount of consumed resources "yesterday" (make sure this task executed only once a day)
         Reduce customer's balance accordingly
         Stop online resource if needed
     """
-    name = 'paypal.DebigCustomers'
+    name = 'paypal.DebitCustomers'
 
     def is_equal(self, other_task, *args, **kwargs):
         return self.name == other_task.get('name')

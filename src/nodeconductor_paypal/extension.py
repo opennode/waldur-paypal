@@ -36,7 +36,7 @@ class PayPalExtension(NodeConductorExtension):
         from celery.schedules import crontab
         return {
             'debit-customers': {
-                'task': 'paypal.DebigCustomers',
+                'task': 'paypal.DebitCustomers',
                 'schedule': crontab(hour=0, minute=30),
                 'args': (),
             },
