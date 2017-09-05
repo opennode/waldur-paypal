@@ -1,7 +1,7 @@
 from django.test import TestCase
 import mock
 
-from nodeconductor_paypal.backend import PaypalBackend, PayPalError
+from waldur_paypal.backend import PaypalBackend, PayPalError
 
 from .. import factories, fixtures
 
@@ -21,7 +21,7 @@ class CreateInvoiceTest(BaseBackendTest):
         self.invoice.backend_id = ''
         self.invoice.save()
 
-    @mock.patch('nodeconductor_paypal.backend.paypal.Invoice')
+    @mock.patch('waldur_paypal.backend.paypal.Invoice')
     def test_invoice_is_created(self, invoice_mock):
         self.invoice.items.add(factories.InvoiceItemFactory())
         backend_invoice = mock.Mock()
@@ -65,7 +65,7 @@ class DownloadInvoicePDFTest(BaseBackendTest):
 
         self.assertRaises(PayPalError, self.backend.download_invoice_pdf, self.invoice)
 
-    @mock.patch('nodeconductor_paypal.backend.urllib2.urlopen')
+    @mock.patch('waldur_paypal.backend.urllib2.urlopen')
     def test_pdf_is_downloaded(self, urlopen_mock):
         response = mock.Mock()
         response.read.return_value = 'PDF file content'

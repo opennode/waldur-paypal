@@ -13,12 +13,13 @@ install_requires = [
 
 
 setup(
-    name='nodeconductor-paypal',
+    name='waldur-paypal',
     version='0.5.0',
     author='OpenNode Team',
     author_email='info@opennodecloud.com',
-    url='http://nodeconductor.com',
-    description='NodeConductor PayPal allows to make payments via PayPal',
+    url='http://waldur.com',
+    description='Waldur PayPal allows to make payments via PayPal',
+    license='MIT',
     long_description=open('README.rst').read(),
     package_dir={'': 'src'},
     packages=find_packages('src'),
@@ -29,7 +30,7 @@ setup(
     },
     entry_points={
         'nodeconductor_extensions': (
-            'nodeconductor_paypal = nodeconductor_paypal.extension:PayPalExtension',
+            'waldur_paypal = waldur_paypal.extension:PayPalExtension',
         ),
     },
     # tests_require=tests_requires,

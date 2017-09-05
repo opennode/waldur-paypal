@@ -18,7 +18,7 @@ class DebitCustomers(core_tasks.BackgroundTask):
         Reduce customer's balance accordingly
         Stop online resource if needed
     """
-    name = 'paypal.DebitCustomers'
+    name = 'waldur_paypal.DebitCustomers'
 
     def is_equal(self, other_task, *args, **kwargs):
         return self.name == other_task.get('name')
@@ -47,18 +47,18 @@ class DebitCustomers(core_tasks.BackgroundTask):
 
 
 class PaymentsCleanUp(core_tasks.BackgroundTask):
-    name = 'paypal.PaymentsCleanUp'
+    name = 'waldur_paypal.PaymentsCleanUp'
 
     def is_equal(self, other_task, *args, **kwargs):
         return self.name == other_task.get('name')
 
     def run(self):
-        timespan = settings.NODECONDUCTOR_PAYPAL.get('STALE_PAYMENTS_LIFETIME', timedelta(weeks=1))
+        timespan = settings.WALDUR_PAYPAL.get('STALE_PAYMENTS_LIFETIME', timedelta(weeks=1))
         models.Payment.objects.filter(state=models.Payment.States.CREATED, created__lte=timezone.now() - timespan).delete()
 
 
 class SendInvoices(core_tasks.BackgroundTask):
-    name = 'paypal.SendInvoices'
+    name = 'waldur_paypal.SendInvoices'
 
     def is_equal(self, other_task, *args, **kwargs):
         return self.name == other_task.get('name')

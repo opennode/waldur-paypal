@@ -6,9 +6,9 @@ from rest_framework import test, status
 
 from nodeconductor.structure import models as structure_models
 from nodeconductor.structure.tests import fixtures as structure_fixtures, factories as structure_factories
-from nodeconductor_paypal.backend import PaypalPayment, PayPalError
-from nodeconductor_paypal.helpers import override_paypal_settings
-from nodeconductor_paypal.models import Payment
+from waldur_paypal.backend import PaypalPayment, PayPalError
+from waldur_paypal.helpers import override_paypal_settings
+from waldur_paypal.models import Payment
 
 from .factories import PaypalPaymentFactory
 
@@ -38,7 +38,7 @@ class BasePaymentTest(test.APITransactionTestCase):
 class PaymentCreateTest(BasePaymentTest):
 
     def create_payment(self, user, fail=False):
-        with mock.patch('nodeconductor_paypal.views.PaypalBackend') as backend:
+        with mock.patch('waldur_paypal.views.PaypalBackend') as backend:
             if fail:
                 backend().make_payment.side_effect = PayPalError()
             else:
@@ -80,7 +80,7 @@ class PaymentApprovalTest(BasePaymentTest):
                                        state=Payment.States.CREATED,
                                        amount=amount or 100.0)
 
-        with mock.patch('nodeconductor_paypal.views.PaypalBackend') as backend:
+        with mock.patch('waldur_paypal.views.PaypalBackend') as backend:
             if fail:
                 backend().approve_payment.side_effect = PayPalError()
 

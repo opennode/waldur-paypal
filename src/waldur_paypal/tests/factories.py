@@ -6,7 +6,7 @@ from django.utils import timezone
 
 from nodeconductor.structure.tests import factories as structure_factories
 
-from nodeconductor_paypal import models
+from waldur_paypal import models
 
 
 class PaypalPaymentFactory(factory.DjangoModelFactory):

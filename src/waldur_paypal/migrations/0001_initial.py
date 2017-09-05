@@ -53,7 +53,7 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(max_length=255)),
                 ('start', models.DateTimeField(null=True)),
                 ('end', models.DateTimeField(null=True)),
-                ('invoice', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='items', to='nodeconductor_paypal.Invoice')),
+                ('invoice', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='items', to='waldur_paypal.Invoice')),
             ],
             options={
                 'ordering': ['invoice', '-start'],
