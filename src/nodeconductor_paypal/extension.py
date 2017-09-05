@@ -9,18 +9,15 @@ class PayPalExtension(NodeConductorExtension):
 
     class Settings(object):
         NODECONDUCTOR_PAYPAL = {
-            'ENABLED': True,
+            'ENABLED': False,
             'BACKEND': {
                 'mode': 'sandbox',
                 'client_id': '',
                 'client_secret': '',
-                'currency_name': 'USD'
+                'currency_name': 'USD',
             },
             'INVOICE': {
-                'logo': 'robohare.png',
-                'company': 'OpenNode',
-                'bank': 'American Bank',
-                'account': '123456789',
+                'template': 'https://www.sandbox.paypal.com/invoice/payerView/details/%(invoice_id)s?printPdfMode=true',
             },
             'STALE_PAYMENTS_LIFETIME': timedelta(weeks=1)
         }
@@ -36,18 +33,21 @@ class PayPalExtension(NodeConductorExtension):
 
     @staticmethod
     def celery_tasks():
-        return {}
-        # from celery.schedules import crontab
-        # TODO [TM:8/30/17] Payments do not work at the moment until new payment flow is implemented
-        # {
-        #     'debit-customers': {
-        #         'task': 'paypal.DebigCustomers',
-        #         'schedule': crontab(hour=0, minute=30),
-        #         'args': (),
-        #     },
-        #     'payments-cleanup': {
-        #         'task': 'paypal.PaymentsCleanUp',
-        #         'schedule': timedelta(hours=24),
-        #         'args': (),
-        #     }
-        # }
+        from celery.schedules import crontab
+        return {
+            'debit-customers': {
+                'task': 'paypal.DebitCustomers',
+                'schedule': crontab(hour=0, minute=30),
+                'args': (),
+            },
+            'payments-cleanup': {
+                'task': 'paypal.PaymentsCleanUp',
+                'schedule': timedelta(hours=24),
+                'args': (),
+            },
+            'send-invoices': {
+                'task': 'paypal.SendInvoices',
+                'schedule': timedelta(hours=24),
+                'args': (),
+            }
+        }

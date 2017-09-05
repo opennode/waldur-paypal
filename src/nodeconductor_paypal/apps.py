@@ -9,6 +9,7 @@ class PayPalConfig(AppConfig):
 
     def ready(self):
         from . import handlers
+        from nodeconductor.cost_tracking import signals as cost_signals
 
         Invoice = self.get_model('Invoice')
         User = get_user_model()
@@ -29,4 +30,10 @@ class PayPalConfig(AppConfig):
             handlers.add_email_hooks_to_user,
             sender=User,
             dispatch_uid='nodeconductor_paypal.handlers.add_email_hooks_to_user',
+        )
+
+        cost_signals.invoice_created.connect(
+            handlers.create_invoice,
+            sender=None,
+            dispatch_uid='nodeconductor_paypal.handlers.create_invoice',
         )

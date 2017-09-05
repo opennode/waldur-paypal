@@ -3,33 +3,29 @@ import logging
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 
-from nodeconductor.core.tasks import send_task
-from . import models
+from nodeconductor.core.admin import ExecutorAdminAction
+from nodeconductor.structure import admin as structure_admin
+
+from . import models, executors
 
 logger = logging.getLogger(__name__)
 
 
-class InvoiceAdmin(admin.ModelAdmin):
-    list_display = ['customer', 'total_amount', 'start_date', 'end_date']
-    actions = ['generate_invoice_pdf']
+class InvoiceAdmin(structure_admin.BackendModelAdmin):
+    list_display = ['customer', 'state', 'start_date', 'end_date', 'tax_percent', 'backend_id']
+    actions = ['download_invoice_pdf', 'create_invoice']
 
-    def generate_invoice_pdf(self, request, queryset):
-        for invoice in queryset.iterator():
-            send_task('paypal', 'generate_invoice_pdf')(invoice.id)
+    class CreateInvoice(ExecutorAdminAction):
+        executor = executors.InvoiceCreateExecutor
+        short_description = _('Create invoice')
 
-        tasks_scheduled = queryset.count()
-        message = _(
-            'Scheduled generation of PDF for one invoice.',
-            'Scheduled generation of PDF for %(tasks_scheduled)d invoice.',
-            tasks_scheduled
-        )
-        message = message % {
-            'tasks_scheduled': tasks_scheduled,
-        }
+    create_invoice = CreateInvoice()
 
-        self.message_user(request, message)
+    class DownloadInvoicePDF(ExecutorAdminAction):
+        executor = executors.DownloadInvoicePDFExecutor
+        short_description = _('Download invoice PDF')
 
-    generate_invoice_pdf.short_description = "Generate invoice PDF"
+    download_invoice_pdf = DownloadInvoicePDF()
 
 
 class PaymentAdmin(admin.ModelAdmin):

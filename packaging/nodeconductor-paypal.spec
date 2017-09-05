@@ -7,10 +7,8 @@ License: MIT
 Url: http://nodeconductor.com
 Source0: %{name}-%{version}.tar.gz
 
-Requires: nodeconductor >= 0.102.0
+Requires: nodeconductor >= 0.146.2
 Requires: python-paypal-rest-sdk >= 1.10.0, python-paypal-rest-sdk < 2.0
-Requires: python-xhtml2pdf >= 0.0.6
-Requires: python-html5lib < 1:0.99999999
 
 BuildArch: noarch
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot

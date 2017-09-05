@@ -1,23 +1,21 @@
 from __future__ import unicode_literals
 
 import logging
-import os
-from StringIO import StringIO
 
-from django.conf import settings
-from django.core.files.base import ContentFile
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
-from django.template.loader import render_to_string
-from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible
 from django_fsm import transition, FSMIntegerField
+from django.utils.translation import ugettext_lazy as _
 from model_utils.models import TimeStampedModel
-from xhtml2pdf.pisa import pisaDocument
 
-from nodeconductor.core.models import UuidMixin, ErrorMessageMixin
+from nodeconductor.core.fields import JSONField
+from nodeconductor.core.models import UuidMixin, ErrorMessageMixin, BackendModelMixin
 from nodeconductor.logging.loggers import LoggableMixin
 from nodeconductor.structure.models import Customer
 
+
+from . import backend
 
 logger = logging.getLogger(__name__)
 
@@ -87,85 +85,91 @@ class Payment(LoggableMixin, TimeStampedModel, UuidMixin, ErrorMessageMixin):
 
 
 @python_2_unicode_compatible
-class Invoice(LoggableMixin, UuidMixin):
+class Invoice(LoggableMixin, UuidMixin, BackendModelMixin):
     class Meta(object):
         ordering = ['-start_date']
 
     class Permissions(object):
         customer_path = 'customer'
 
+    class States(object):
+        DRAFT = 'DRAFT'
+        SENT = 'SENT'
+        PAID = 'PAID'
+        MARKED_AS_PAID = 'MARKED_AS_PAID'
+        CANCELLED = 'CANCELLED'
+        REFUNDED = 'REFUNDED'
+        PARTIALLY_REFUNDED = 'PARTIALLY_REFUNDED'
+        MARKED_AS_REFUNDED = 'MARKED_AS_REFUNDED'
+        UNPAID = 'UNPAID'
+        PAYMENT_PENDING = 'PAYMENT_PENDING'
+
+        CHOICES = ((DRAFT, _('Draft')), (SENT, _('Sent')), (PAID, _('Paid')), (MARKED_AS_PAID, _('Marked as paid')),
+                   (CANCELLED, _('Cancelled')), (REFUNDED, _('Refunded')),
+                   (PARTIALLY_REFUNDED, _('Partially refunded')), (MARKED_AS_REFUNDED, _('Marked as refunded')),
+                   (UNPAID, _('Unpaid')), (PAYMENT_PENDING, _('Payment pending')))
+
     customer = models.ForeignKey(Customer, related_name='paypal_invoices')
+    state = models.CharField(max_length=30, choices=States.CHOICES, default=States.DRAFT)
     start_date = models.DateField()
     end_date = models.DateField()
     pdf = models.FileField(upload_to='paypal-invoices', blank=True, null=True)
+    issuer_details = JSONField(default={}, blank=True, help_text=_('Stores data about invoice issuer'))
+    tax_percent = models.DecimalField(default=0, max_digits=4, decimal_places=2,
+                                      validators=[MinValueValidator(0), MaxValueValidator(100)])
+    backend_id = models.CharField(max_length=128, blank=True)
+
+    def get_backend(self):
+        return backend.PaypalBackend()
+
+    @classmethod
+    def get_backend_fields(cls):
+        return super(Invoice, cls).get_backend_fields() + ('state', 'issuer_details', 'backend_id')
 
     @classmethod
     def get_url_name(cls):
         return 'paypal-invoice'
 
     @property
-    def total_amount(self):
-        """ Get total price of all items including VAT tax """
-        return sum(item.amount for item in self.items.all())
+    def file_name(self):
+        return '{}-invoice-{}.pdf'.format(self.start_date.strftime('%Y-%m-%d'), self.pk)
 
     @property
-    def total_tax(self):
-        """ Get total price of all items' VAT tax """
-        return sum(item.tax for item in self.items.all())
+    def total(self):
+        return self.price + self.tax
 
     @property
-    def subtotal(self):
-        """ Get subtotal price (excluding VAt tax) """
-        return self.total_amount - self.total_tax
+    def price(self):
+        return sum(item.price for item in self.items.all())
+
+    @property
+    def tax(self):
+        return self.price * self.tax_percent / 100
 
     def get_log_fields(self):
         return ('uuid', 'customer', 'total_amount', 'start_date', 'end_date')
-
-    def generate_invoice_file_name(self):
-        return '{}-invoice-{}.pdf'.format(self.start_date.strftime('%Y-%m-%d'), self.pk)
-
-    def generate_pdf(self):
-        # cleanup if pdf already existed
-        if self.pdf is not None:
-            self.pdf.delete()
-
-        info = settings.NODECONDUCTOR_PAYPAL.get('INVOICE', {})
-        logo = info.get('logo', None)
-        if logo and not logo.startswith('/'):
-            logo = os.path.join(settings.BASE_DIR, logo)
-
-        currency = settings.NODECONDUCTOR_PAYPAL['BACKEND']['currency_name']
-
-        html = render_to_string('nodeconductor_paypal/invoice.html', {
-            'invoice': self,
-            'invoice_date': timezone.now(),
-            'currency': currency,
-            'info': info,
-            'logo': logo
-        })
-
-        result = StringIO()
-        pdf = pisaDocument(StringIO(html), result)
-        self.pdf.save(self.generate_invoice_file_name(), ContentFile(result.getvalue()))
-        if pdf.err:
-            logger.error('Unable to save PDF to file: %s', pdf.err)
-        else:
-            self.save(update_fields=['pdf'])
 
     def __str__(self):
         return "Invoice #%s" % self.id
 
 
 class InvoiceItem(models.Model):
-    """
-    Invoice item corresponds to transaction of payment or billing plan agreement
-    """
     class Meta(object):
-        ordering = ['invoice', '-created_at']
+        ordering = ['invoice', '-start']
+
+    class UnitsOfMeasure(object):
+        QUANTITY = 'QUANTITY'
+        HOURS = 'HOURS'
+        AMOUNT = 'AMOUNT'
+
+        CHOICES = ((QUANTITY, _('Quantity')), (HOURS, _('Hours')), (AMOUNT, _('Amount')))
 
     invoice = models.ForeignKey(Invoice, related_name='items')
-    amount = models.DecimalField(max_digits=9, decimal_places=2)
+    price = models.DecimalField(max_digits=9, decimal_places=2)
     tax = models.DecimalField(max_digits=9, decimal_places=2, default=0)
-    description = models.CharField(max_length=255)
-    created_at = models.DateTimeField(auto_now_add=True)
-    backend_id = models.CharField(max_length=255, blank=True, null=True)
+    unit_price = models.DecimalField(max_digits=9, decimal_places=2)
+    quantity = models.PositiveIntegerField(default=0)
+    unit_of_measure = models.CharField(max_length=30, choices=UnitsOfMeasure.CHOICES, default=UnitsOfMeasure.HOURS)
+    name = models.CharField(max_length=255)
+    start = models.DateTimeField(null=True)
+    end = models.DateTimeField(null=True)

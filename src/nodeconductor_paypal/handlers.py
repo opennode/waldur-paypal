@@ -3,6 +3,7 @@ import logging
 from nodeconductor.logging import models as logging_models
 
 from .log import event_logger
+from . import models
 
 
 logger = logging.getLogger(__name__)
@@ -48,3 +49,29 @@ def add_email_hooks_to_user(sender, instance, created, **kwargs):
         event_types=event_types,
         email=user.email,
     )
+
+
+def create_invoice(sender, invoice, issuer_details, **kwargs):
+    """
+    Creates an invoice when customer is "billed".
+    :param sender: Invoice model
+    :param invoice: Invoice instance
+    :param issuer_details: details about issuer
+    """
+    paypal_invoice = models.Invoice.objects.create(customer=invoice.customer,
+                                                   start_date=invoice.invoice_date,
+                                                   end_date=invoice.due_date,
+                                                   tax_percent=invoice.tax_percent,
+                                                   issuer_details=issuer_details)
+
+    for item in invoice.items:
+        models.InvoiceItem.objects.create(
+            invoice=paypal_invoice,
+            price=item.price,
+            tax=item.tax,
+            quantity=item.usage_days * 24,
+            unit_price=item.unit_price,
+            unit_of_measure=models.InvoiceItem.UnitsOfMeasure.HOURS,
+            name=item.name,
+            start=item.start,
+            end=item.end)
