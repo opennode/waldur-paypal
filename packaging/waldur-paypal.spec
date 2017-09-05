@@ -35,5 +35,5 @@ rm -rf %{buildroot}
 %defattr(-,root,root)
 
 %changelog
-* Tue Sep 5 2017 Victor Mireyev <victor@opennodecloud.com> - 0.1.0-1.el7
-- Initial version of the package
+* Tue Sep 5 2017 Victor Mireyev <victor@opennodecloud.com> - 0.5.0-1.el7
+- Rename package to waldur-paypal
