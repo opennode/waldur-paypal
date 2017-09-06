@@ -3,6 +3,7 @@ import dateutil.parser
 import decimal
 import paypalrestsdk as paypal
 import urlparse
+import urllib
 import urllib2
 
 from django.conf import settings
@@ -23,6 +24,11 @@ class PaypalPayment(object):
 
 class PaypalBackend(object):
 
+    BACKEND_SERVERS_MAP = {
+        'sandbox': 'https://www.sandbox.paypal.com',
+        'live': 'https://www.paypal.com',
+    }
+
     def __init__(self):
         config = settings.WALDUR_PAYPAL['BACKEND']
         self.configure(**config)
@@ -36,6 +42,17 @@ class PaypalBackend(object):
             'client_id': client_id,
             'client_secret': client_secret
         })
+
+        self.server = self.BACKEND_SERVERS_MAP[mode]
+
+    def get_payment_view_url(self, backend_invoice_id, params=None):
+        details_url = settings.WALDUR_PAYPAL['INVOICE']['details_url']
+        invoice_url = '%s%s%s' % (self.server, details_url, backend_invoice_id)
+        if params:
+            query_params = urllib.urlencode(params)
+            invoice_url = '%s?%s' % (invoice_url, query_params)
+
+        return invoice_url
 
     def _find_approval_url(self, links):
         for link in links:
@@ -139,13 +156,39 @@ class PaypalBackend(object):
             if backend_invoice.create():
                 invoice.state = backend_invoice.status
                 invoice.backend_id = backend_invoice.id
-                invoice.save(update_fields=['state', 'backend_id'])
+                invoice.number = backend_invoice.number
+                invoice.save(update_fields=['state', 'backend_id', 'number'])
 
                 return invoice
             else:
                 raise PayPalError(backend_invoice.error)
         except paypal.exceptions.ConnectionError as e:
             six.reraise(PayPalError, e)
+
+    def send_invoice(self, invoice):
+        if invoice.state != invoice.States.DRAFT:
+            raise PayPalError('Invoice must be in "%s" state' % invoice.States.DRAFT)
+
+        try:
+            backend_invoice = paypal.Invoice.find(invoice.backend_id)
+        except paypal.exceptions.ConnectionError as e:
+            six.reraise(PayPalError, e)
+
+        if not backend_invoice.send():
+            raise PayPalError(backend_invoice.error)
+
+        return invoice
+
+    def pull_invoice(self, invoice):
+        try:
+            backend_invoice = paypal.Invoice.find(invoice.backend_id)
+        except paypal.exceptions.ConnectionError as e:
+            six.reraise(PayPalError, e)
+
+        invoice.state = backend_invoice.status
+        invoice.number = backend_invoice.number
+        invoice.save(update_fields=['state', 'number'])
+        return invoice
 
     def make_payment(self, amount, tax, description, return_url, cancel_url):
         """
@@ -381,12 +424,11 @@ class PaypalBackend(object):
     def download_invoice_pdf(self, invoice):
         if not invoice.backend_id:
             raise PayPalError('Invoice for date %s and customer %s could not be found' % (
-                invoice.start_date.strftime('%Y-%m-%d'),
+                invoice.invoice_date.strftime('%Y-%m-%d'),
                 invoice.customer.name,
             ))
 
-        paypal_template = settings.WALDUR_PAYPAL['INVOICE']['template']
-        invoice_url = paypal_template % {'invoice_id': invoice.backend_id}
+        invoice_url = self.get_payment_view_url(invoice.backend_id, {'printPdfMode': 'true'})
         response = urllib2.urlopen(invoice_url) # nosec
         content = response.read()
         invoice.pdf.save(invoice.file_name, ContentFile(content), save=True)

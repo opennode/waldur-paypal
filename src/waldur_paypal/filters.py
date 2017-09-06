@@ -19,7 +19,7 @@ class PaymentFilter(django_filters.FilterSet):
 class InvoiceFilter(django_filters.FilterSet):
     class Meta(object):
         model = models.Invoice
-        fields = ('customer',)
+        fields = ('customer', 'year', 'month')
 
     customer = core_filters.URLFilter(view_name='customer-detail', name='customer__uuid')
     customer_uuid = django_filters.UUIDFilter(name='customer__uuid')

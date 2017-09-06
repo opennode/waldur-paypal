@@ -11,13 +11,13 @@ class PayPalExtension(NodeConductorExtension):
         WALDUR_PAYPAL = {
             'ENABLED': False,
             'BACKEND': {
-                'mode': 'sandbox',
+                'mode': 'sandbox',  # either 'live' or 'sandbox'
                 'client_id': '',
                 'client_secret': '',
                 'currency_name': 'USD',
             },
             'INVOICE': {
-                'template': 'https://www.sandbox.paypal.com/invoice/payerView/details/%(invoice_id)s?printPdfMode=true',
+                'details_url': '/invoice/payerView/details/',
             },
             'STALE_PAYMENTS_LIFETIME': timedelta(weeks=1)
         }
@@ -25,6 +25,11 @@ class PayPalExtension(NodeConductorExtension):
     @staticmethod
     def django_app():
         return 'waldur_paypal'
+
+    @staticmethod
+    def django_urls():
+        from .urls import urlpatterns
+        return urlpatterns
 
     @staticmethod
     def rest_urls():

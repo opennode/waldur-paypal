@@ -1,16 +1,14 @@
 import decimal
 import mock
-import unittest
 
 from rest_framework import test, status
 
-from nodeconductor.structure import models as structure_models
 from nodeconductor.structure.tests import fixtures as structure_fixtures, factories as structure_factories
 from waldur_paypal.backend import PaypalPayment, PayPalError
 from waldur_paypal.helpers import override_paypal_settings
 from waldur_paypal.models import Payment
 
-from .factories import PaypalPaymentFactory
+from . import factories
 
 
 @override_paypal_settings(ENABLED=True)
@@ -38,7 +36,7 @@ class BasePaymentTest(test.APITransactionTestCase):
 class PaymentCreateTest(BasePaymentTest):
 
     def create_payment(self, user, fail=False):
-        with mock.patch('waldur_paypal.views.PaypalBackend') as backend:
+        with mock.patch('waldur_paypal.backend.PaypalBackend') as backend:
             if fail:
                 backend().make_payment.side_effect = PayPalError()
             else:
@@ -48,7 +46,7 @@ class PaymentCreateTest(BasePaymentTest):
                         token=self.valid_response['token'])
 
             self.client.force_authenticate(user)
-            return self.client.post(PaypalPaymentFactory.get_list_url(), data=self.valid_request)
+            return self.client.post(factories.PaypalPaymentFactory.get_list_url(), data=self.valid_request)
 
     def test_staff_can_create_payment_for_any_customer(self):
         response = self.create_payment(self.fixture.staff)
@@ -76,16 +74,17 @@ class PaymentCreateTest(BasePaymentTest):
 class PaymentApprovalTest(BasePaymentTest):
 
     def approve_payment(self, user, amount=None, fail=False):
-        payment = PaypalPaymentFactory(customer=self.customer,
-                                       state=Payment.States.CREATED,
-                                       amount=amount or 100.0)
+        payment = factories.PaypalPaymentFactory(
+            customer=self.customer,
+            state=Payment.States.CREATED,
+            amount=amount or 100.0)
 
-        with mock.patch('waldur_paypal.views.PaypalBackend') as backend:
+        with mock.patch('waldur_paypal.backend.PaypalBackend') as backend:
             if fail:
                 backend().approve_payment.side_effect = PayPalError()
 
             self.client.force_authenticate(user)
-            return self.client.post(PaypalPaymentFactory.get_list_url() + 'approve/', data={
+            return self.client.post(factories.PaypalPaymentFactory.get_list_url() + 'approve/', data={
                 'payment_id': payment.backend_id,
                 'payer_id': self.valid_response['payer_id'],
                 'token': payment.token
@@ -108,8 +107,8 @@ class PaymentCancellationTest(BasePaymentTest):
 
     def cancel_payment(self, user):
         self.client.force_authenticate(user)
-        payment = PaypalPaymentFactory(customer=self.customer, state=Payment.States.CREATED)
-        return self.client.post(PaypalPaymentFactory.get_list_url() + 'cancel/', data={
+        payment = factories.PaypalPaymentFactory(customer=self.customer, state=Payment.States.CREATED)
+        return self.client.post(factories.PaypalPaymentFactory.get_list_url() + 'cancel/', data={
             'token': payment.token
         })
 

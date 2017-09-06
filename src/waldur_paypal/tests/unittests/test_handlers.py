@@ -43,6 +43,17 @@ class CreateInvoiceTest(TestCase):
         invoice.due_date = invoice.invoice_date + datetime.timedelta(days=30)
         return invoice
 
+    def _get_payment_details(self):
+        payment_details = mock.Mock()
+        payment_details.company = 'Company'
+        payment_details.address = 'Address #1'
+        payment_details.country = 'Wonderland'
+        payment_details.email = 'test@example.com'
+        payment_details.postal = '10110'
+        payment_details.phone = '+372-555-55-55'
+        payment_details.bank = 'Harry Potter Bank #2.5'
+        return payment_details
+
     def _generate_invoice_items(self, count=1):
         items = []
 
@@ -60,7 +71,7 @@ class CreateInvoiceTest(TestCase):
 
         return items
 
-    def test_paypal_invoice_is_created(self):
+    def test_invoice_is_created(self):
         invoice = self._get_valid_invoice()
         invoice.items = self._generate_invoice_items(2)
         self.assertEqual(models.Invoice.objects.count(), 0)
@@ -68,7 +79,9 @@ class CreateInvoiceTest(TestCase):
         handlers.create_invoice(sender=None, invoice=invoice, issuer_details=self.issuer_details)
 
         self.assertEqual(models.Invoice.objects.count(), 1)
-        new_invoice = models.Invoice.objects.get(start_date=invoice.invoice_date, customer=invoice.customer)
+        new_invoice = models.Invoice.objects.get(invoice_date=invoice.invoice_date, customer=invoice.customer)
+        self.assertEqual(new_invoice.year, invoice.year)
+        self.assertEqual(new_invoice.month, invoice.month)
         self.assertEqual(new_invoice.items.count(), 2)
 
         for original_item in invoice.items:
@@ -80,3 +93,4 @@ class CreateInvoiceTest(TestCase):
             self.assertEqual(created_item.tax, original_item.tax)
             self.assertEqual(created_item.unit_of_measure, models.InvoiceItem.UnitsOfMeasure.HOURS)
             self.assertEqual(created_item.quantity, original_item.usage_days * 24)
+
