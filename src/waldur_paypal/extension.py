@@ -16,9 +16,6 @@ class PayPalExtension(NodeConductorExtension):
                 'client_secret': '',
                 'currency_name': 'USD',
             },
-            'INVOICE': {
-                'details_url': '/invoice/payerView/details/',
-            },
             'STALE_PAYMENTS_LIFETIME': timedelta(weeks=1)
         }
 

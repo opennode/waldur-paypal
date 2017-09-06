@@ -46,8 +46,7 @@ class PaypalBackend(object):
         self.server = self.BACKEND_SERVERS_MAP[mode]
 
     def get_payment_view_url(self, backend_invoice_id, params=None):
-        details_url = settings.WALDUR_PAYPAL['INVOICE']['details_url']
-        invoice_url = '%s%s%s' % (self.server, details_url, backend_invoice_id)
+        invoice_url = '%s/invoice/payerView/details/%s' % (self.server, backend_invoice_id)
         if params:
             query_params = urllib.urlencode(params)
             invoice_url = '%s?%s' % (invoice_url, query_params)
