@@ -37,7 +37,9 @@ class InvoiceFactory(factory.DjangoModelFactory):
     customer = factory.SubFactory(structure_factories.CustomerFactory)
     backend_id = factory.Sequence(lambda n: 'INV2-ETBW-Q5NB-VWLT-9RH%s' % n)
     state = models.Invoice.States.DRAFT
-    start_date = factory.fuzzy.FuzzyDate(start_date=timezone.now().date())
+    invoice_date = factory.fuzzy.FuzzyDate(start_date=timezone.now().date())
+    month = factory.fuzzy.FuzzyInteger(1, 12)
+    year = factory.fuzzy.FuzzyInteger(1970, 2017)
     end_date = factory.fuzzy.FuzzyDate(start_date=timezone.now().date())
     tax_percent = factory.fuzzy.FuzzyInteger(1, 10)
     issuer_details = factory.Dict({

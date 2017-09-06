@@ -1,13 +1,15 @@
 from decimal import Decimal
 import logging
 
+from django.db import transaction
+from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from rest_framework.reverse import reverse
 
 from nodeconductor.core import serializers as core_serializers
 from nodeconductor.structure.models import VATException
 
-from .models import Payment, Invoice, InvoiceItem
+from . import models
 
 
 logger = logging.getLogger(__name__)
@@ -22,7 +24,7 @@ class PaymentSerializer(core_serializers.AugmentedSerializerMixin,
     cancel_url = serializers.CharField(write_only=True)
 
     class Meta(object):
-        model = Payment
+        model = models.Payment
 
         fields = (
             'url', 'uuid', 'created', 'modified', 'state',
@@ -64,7 +66,7 @@ class PaymentCancelSerializer(serializers.Serializer):
 
 class InvoiceItemSerializer(serializers.ModelSerializer):
     class Meta(object):
-        model = InvoiceItem
+        model = models.InvoiceItem
         fields = ('price', 'tax', 'unit_price', 'quantity', 'unit_of_measure', 'name', 'start', 'end')
 
 
@@ -73,19 +75,26 @@ class InvoiceSerializer(core_serializers.AugmentedSerializerMixin,
 
     pdf = serializers.SerializerMethodField()
     items = InvoiceItemSerializer(many=True, read_only=True)
+    payment_url = serializers.SerializerMethodField()
+    issuer_details = serializers.JSONField()
+    payment_details = serializers.JSONField()
 
     class Meta(object):
-        model = Invoice
+        model = models.Invoice
         fields = (
-            'url', 'uuid', 'total', 'price', 'tax', 'pdf', 'backend_id',
-            'start_date', 'end_date', 'state', 'items',
-            'customer', 'customer_uuid', 'customer_name'
+            'url', 'uuid', 'total', 'price', 'tax', 'pdf', 'backend_id', 'issuer_details',
+            'invoice_date', 'end_date', 'state', 'items', 'payment_url', 'payment_details',
+            'customer', 'customer_uuid', 'customer_name', 'year', 'month', 'number',
         )
         related_paths = ('customer',)
         extra_kwargs = {
             'url': {'lookup_field': 'uuid', 'view_name': 'paypal-invoice-detail'},
             'customer': {'lookup_field': 'uuid'}
         }
+
+    def get_payment_url(self, invoice):
+        backend = invoice.get_backend()
+        return backend.get_payment_view_url(invoice.backend_id) if invoice.backend_id else None
 
     def get_pdf(self, invoice):
         """
@@ -95,3 +104,20 @@ class InvoiceSerializer(core_serializers.AugmentedSerializerMixin,
             return reverse('paypal-invoice-pdf',
                            kwargs={'uuid': invoice.uuid},
                            request=self.context['request'])
+
+
+class InvoiceUpdateWebHookSerializer(serializers.Serializer):
+
+    @transaction.atomic()
+    def save(self, **kwargs):
+        backend_id = self.initial_data['resource']['id']
+        status = self.initial_data['resource']['status']
+
+        try:
+            invoice = models.Invoice.objects.get(backend_id=backend_id)
+        except models.Invoice.DoesNotExist:
+            raise serializers.ValidationError({'backend_id': _('Invoice with id "%s" cannot be found.') % backend_id})
+
+        invoice.state = status
+        invoice.save(update_fields=['state'])
+        return invoice

@@ -60,6 +60,9 @@ class Payment(LoggableMixin, TimeStampedModel, UuidMixin, ErrorMessageMixin):
     def __str__(self):
         return "%s %.2f %s" % (self.modified, self.amount, self.customer.name)
 
+    def get_backend(self):
+        return backend.PaypalBackend()
+
     @classmethod
     def get_url_name(cls):
         return 'paypal-payment'
@@ -87,7 +90,7 @@ class Payment(LoggableMixin, TimeStampedModel, UuidMixin, ErrorMessageMixin):
 @python_2_unicode_compatible
 class Invoice(LoggableMixin, UuidMixin, BackendModelMixin):
     class Meta(object):
-        ordering = ['-start_date']
+        ordering = ['-invoice_date']
 
     class Permissions(object):
         customer_path = 'customer'
@@ -111,20 +114,25 @@ class Invoice(LoggableMixin, UuidMixin, BackendModelMixin):
 
     customer = models.ForeignKey(Customer, related_name='paypal_invoices')
     state = models.CharField(max_length=30, choices=States.CHOICES, default=States.DRAFT)
-    start_date = models.DateField()
+    invoice_date = models.DateField()
     end_date = models.DateField()
     pdf = models.FileField(upload_to='paypal-invoices', blank=True, null=True)
-    issuer_details = JSONField(default={}, blank=True, help_text=_('Stores data about invoice issuer'))
+    number = models.CharField(max_length=30)
     tax_percent = models.DecimalField(default=0, max_digits=4, decimal_places=2,
                                       validators=[MinValueValidator(0), MaxValueValidator(100)])
     backend_id = models.CharField(max_length=128, blank=True)
+    issuer_details = JSONField(default={}, blank=True, help_text=_('Stores data about invoice issuer'))
+    payment_details = JSONField(default={}, blank=True, help_text=_('Stores data about customer payment details'))
+    month = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(12)])
+    year = models.PositiveSmallIntegerField()
 
     def get_backend(self):
         return backend.PaypalBackend()
 
     @classmethod
     def get_backend_fields(cls):
-        return super(Invoice, cls).get_backend_fields() + ('state', 'issuer_details', 'backend_id')
+        return super(Invoice, cls).get_backend_fields() + (
+            'state', 'issuer_details', 'number', 'payment_details', 'backend_id')
 
     @classmethod
     def get_url_name(cls):
@@ -132,7 +140,7 @@ class Invoice(LoggableMixin, UuidMixin, BackendModelMixin):
 
     @property
     def file_name(self):
-        return '{}-invoice-{}.pdf'.format(self.start_date.strftime('%Y-%m-%d'), self.pk)
+        return '{}-invoice-{}.pdf'.format(self.invoice_date.strftime('%Y-%m-%d'), self.pk)
 
     @property
     def total(self):
@@ -147,10 +155,10 @@ class Invoice(LoggableMixin, UuidMixin, BackendModelMixin):
         return self.price * self.tax_percent / 100
 
     def get_log_fields(self):
-        return ('uuid', 'customer', 'total_amount', 'start_date', 'end_date')
+        return ('uuid', 'customer', 'total', 'invoice_date', 'end_date')
 
     def __str__(self):
-        return "Invoice #%s" % self.id
+        return "Invoice #%s" % self.number or self.id
 
 
 class InvoiceItem(models.Model):

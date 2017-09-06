@@ -27,6 +27,7 @@ class CreateInvoiceTest(BaseBackendTest):
         backend_invoice = mock.Mock()
         backend_invoice.id = 'INV2-ETBW-Q5NB-VWLT-9RH1'
         backend_invoice.status = 'DRAFT'
+        backend_invoice.number = '00001'
         invoice_mock.return_value = backend_invoice
 
         result = self.backend.create_invoice(self.invoice)
@@ -76,3 +77,22 @@ class DownloadInvoicePDFTest(BaseBackendTest):
 
         self.assertTrue(self.invoice.pdf)
         urlopen_mock.assert_called_once()
+
+
+class SendInvoiceTest(BaseBackendTest):
+
+    @mock.patch('waldur_paypal.backend.paypal.Invoice')
+    def test_draft_invoice_is_sent(self, invoice_mock):
+        self.invoice.items.add(factories.InvoiceItemFactory())
+        backend_invoice = mock.Mock(name='backend_invoice')
+        invoice_mock.find.return_value = backend_invoice
+
+        self.backend.send_invoice(self.invoice)
+
+        backend_invoice.send.assert_called_once()
+
+    def test_invoice_cannot_be_sent_if_it_is_not_in_draft_state(self):
+        self.invoice.state = self.invoice.States.SENT
+        self.invoice.save()
+
+        self.assertRaises(PayPalError, self.backend.send_invoice, self.invoice)

@@ -12,8 +12,8 @@ logger = logging.getLogger(__name__)
 
 
 class InvoiceAdmin(structure_admin.BackendModelAdmin):
-    list_display = ['customer', 'state', 'start_date', 'end_date', 'tax_percent', 'backend_id']
-    actions = ['download_invoice_pdf', 'create_invoice']
+    list_display = ['customer', 'state', 'invoice_date', 'end_date', 'tax_percent', 'backend_id']
+    actions = ['create_invoice', 'pull']
 
     class CreateInvoice(ExecutorAdminAction):
         executor = executors.InvoiceCreateExecutor
@@ -21,11 +21,11 @@ class InvoiceAdmin(structure_admin.BackendModelAdmin):
 
     create_invoice = CreateInvoice()
 
-    class DownloadInvoicePDF(ExecutorAdminAction):
-        executor = executors.DownloadInvoicePDFExecutor
-        short_description = _('Download invoice PDF')
+    class InvoicePull(ExecutorAdminAction):
+        executor = executors.InvoicePullExecutor
+        short_description = _('Pull invoice')
 
-    download_invoice_pdf = DownloadInvoicePDF()
+    pull = InvoicePull()
 
 
 class PaymentAdmin(admin.ModelAdmin):
