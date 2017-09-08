@@ -1,10 +1,13 @@
 import datetime
-import decimal
-import urlparse
 import dateutil.parser
+import decimal
 import paypalrestsdk as paypal
+import urlparse
+import urllib
+import urllib2
 
 from django.conf import settings
+from django.core.files.base import ContentFile
 from django.utils import six, timezone
 
 
@@ -21,8 +24,13 @@ class PaypalPayment(object):
 
 class PaypalBackend(object):
 
+    BACKEND_SERVERS_MAP = {
+        'sandbox': 'https://www.sandbox.paypal.com',
+        'live': 'https://www.paypal.com',
+    }
+
     def __init__(self):
-        config = settings.NODECONDUCTOR_PAYPAL['BACKEND']
+        config = settings.WALDUR_PAYPAL['BACKEND']
         self.configure(**config)
 
     def configure(self, mode, client_id, client_secret, currency_name, **kwargs):
@@ -34,6 +42,16 @@ class PaypalBackend(object):
             'client_id': client_id,
             'client_secret': client_secret
         })
+
+        self.server = self.BACKEND_SERVERS_MAP[mode]
+
+    def get_payment_view_url(self, backend_invoice_id, params=None):
+        invoice_url = '%s/invoice/payerView/details/%s' % (self.server, backend_invoice_id)
+        if params:
+            query_params = urllib.urlencode(params)
+            invoice_url = '%s?%s' % (invoice_url, query_params)
+
+        return invoice_url
 
     def _find_approval_url(self, links):
         for link in links:
@@ -48,6 +66,128 @@ class PaypalBackend(object):
         if not token:
             raise PayPalError('Unable to parse token from approval_url')
         return token[0]
+
+    def create_invoice(self, invoice):
+        """
+        Creates invoice with invoice items in it.
+        https://developer.paypal.com/docs/api/invoicing/#definition-payment_term
+        :param invoice: instance of Invoice class.
+        :return: instance of Invoice with backend_id filled.
+        """
+
+        if invoice.backend_id:
+            return
+
+        phone = invoice.issuer_details.get('phone', {})
+        if not phone:
+            raise PayPalError('"phone" is a required attribute')
+
+        if phone and 'country_code' not in phone:
+            raise PayPalError('"phone"."country_code" is a required attribute')
+
+        if phone and 'national_number' not in phone:
+            raise PayPalError('"phone"."national_number" is a required attribute')
+
+        invoice_details = {
+            'merchant_info': {
+                'email': invoice.issuer_details.get('email'),
+                'business_name': invoice.issuer_details.get('company'),
+                'phone': {
+                    'country_code': phone.get('country_code'),
+                    'national_number': phone.get('national_number'),
+                },
+                'address': {
+                    'line1': invoice.issuer_details.get('address'),
+                    'city': invoice.issuer_details.get('city'),
+                    'state': invoice.issuer_details.get('state'),
+                    'postal_code': invoice.issuer_details.get('email'),
+                    'country_code': invoice.issuer_details.get('country_code')
+                }
+            },
+            'items': [
+                {
+                    'name': item.name,
+                    'unit_of_measure': item.unit_of_measure,
+                    'quantity': item.quantity,
+                    'date': self._format_date(item.start.date()),
+                    'unit_price': {
+                        'currency': self.currency_name,
+                        'value': self._format_decimal(item.unit_price),
+                    }
+                } for item in invoice.items.iterator()
+            ],
+            'tax_inclusive': False,
+            'payment_term': {
+                'due_date': self._format_date(invoice.end_date),
+            },
+            'total_amount': {
+                'currency': self.currency_name,
+                'value': self._format_decimal(invoice.total)
+            }
+            # 'logo_url': pass logo url if needed. 250x90, HTTPS. Image is not displayed o PDF atm.
+        }
+
+        if invoice.tax_percent and invoice.tax_percent > 0:
+            for item in invoice_details['items']:
+                item['tax'] = {
+                    'name': 'VAT',
+                    'percent': self._format_decimal(invoice.tax_percent),
+                }
+
+        if hasattr(invoice.customer, 'payment_details'):
+            payment_details = invoice.customer.payment_details
+            invoice_details['billing_info'] = [
+                {
+                    'email': payment_details.email,
+                    'business_name': payment_details.company,
+                }
+            ]
+        else:
+            invoice_details['billing_info'] = [
+                {
+                    'email': invoice.customer.email,
+                }
+            ]
+
+        backend_invoice = paypal.Invoice(invoice_details)
+
+        try:
+            if backend_invoice.create():
+                invoice.state = backend_invoice.status
+                invoice.backend_id = backend_invoice.id
+                invoice.number = backend_invoice.number
+                invoice.save(update_fields=['state', 'backend_id', 'number'])
+
+                return invoice
+            else:
+                raise PayPalError(backend_invoice.error)
+        except paypal.exceptions.ConnectionError as e:
+            six.reraise(PayPalError, e)
+
+    def send_invoice(self, invoice):
+        if invoice.state != invoice.States.DRAFT:
+            raise PayPalError('Invoice must be in "%s" state' % invoice.States.DRAFT)
+
+        try:
+            backend_invoice = paypal.Invoice.find(invoice.backend_id)
+        except paypal.exceptions.ConnectionError as e:
+            six.reraise(PayPalError, e)
+
+        if not backend_invoice.send():
+            raise PayPalError(backend_invoice.error)
+
+        return invoice
+
+    def pull_invoice(self, invoice):
+        try:
+            backend_invoice = paypal.Invoice.find(invoice.backend_id)
+        except paypal.exceptions.ConnectionError as e:
+            six.reraise(PayPalError, e)
+
+        invoice.state = backend_invoice.status
+        invoice.number = backend_invoice.number
+        invoice.save(update_fields=['state', 'number'])
+        return invoice
 
     def make_payment(self, amount, tax, description, return_url, cancel_url):
         """
@@ -70,7 +210,7 @@ class PaypalBackend(object):
             'transactions': [
                 {
                     'amount': {
-                        'total': self._format_decimal(amount),  # serialize decimal
+                        'total': self._format_decimal(amount),
                         'currency': self.currency_name,
                         'details': {
                             'subtotal': self._format_decimal(amount - tax),
@@ -169,6 +309,12 @@ class PaypalBackend(object):
         PayPal API expects at most two decimal places with a period separator.
         """
         return "%.2f" % value
+
+    def _format_date(self, date):
+        """
+        At the moment timezone is ignored as only days of resources usage are counted, not hours.
+        """
+        return date.strftime('%Y-%m-%d UTC')
 
     def create_agreement(self, plan_id, name):
         """
@@ -273,3 +419,15 @@ class PaypalBackend(object):
 
         except paypal.exceptions.ConnectionError as e:
             six.reraise(PayPalError, e)
+
+    def download_invoice_pdf(self, invoice):
+        if not invoice.backend_id:
+            raise PayPalError('Invoice for date %s and customer %s could not be found' % (
+                invoice.invoice_date.strftime('%Y-%m-%d'),
+                invoice.customer.name,
+            ))
+
+        invoice_url = self.get_payment_view_url(invoice.backend_id, {'printPdfMode': 'true'})
+        response = urllib2.urlopen(invoice_url) # nosec
+        content = response.read()
+        invoice.pdf.save(invoice.file_name, ContentFile(content), save=True)

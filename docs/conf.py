@@ -51,7 +51,7 @@ copyright = u'2015, OpenNode'
 # built documents.
 #
 # The short X.Y version.
-from nodeconductor_paypal import __version__
+from waldur_paypal import __version__
 
 version = __version__
 # The full version, including alpha/beta/rc tags.
@@ -268,4 +268,4 @@ from django.core.wsgi import get_wsgi_application
 get_wsgi_application()
 
 from nodeconductor.core.management.commands.drfdocs import Command
-Command().handle('nodeconductor_paypal', path='docs/drfapi')
+Command().handle('waldur_paypal', path='docs/drfapi')

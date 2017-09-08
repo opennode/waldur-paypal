@@ -1,5 +1,5 @@
-NodeConductor PayPal
-====================
+Waldur PayPal
+=============
 
-NodeConductor PayPal allows to make payments via PayPal.
+Waldur PayPal allows to make payments via PayPal.
 

@@ -7,26 +7,26 @@ from nodeconductor.core import NodeConductorExtension
 
 class PayPalExtension(NodeConductorExtension):
 
-    class Settings:
-        NODECONDUCTOR_PAYPAL = {
+    class Settings(object):
+        WALDUR_PAYPAL = {
+            'ENABLED': False,
             'BACKEND': {
-                'mode': 'sandbox',
+                'mode': 'sandbox',  # either 'live' or 'sandbox'
                 'client_id': '',
                 'client_secret': '',
-                'currency_name': 'USD'
-            },
-            'INVOICE': {
-                'logo': 'robohare.png',
-                'company': 'OpenNode',
-                'bank': 'American Bank',
-                'account': '123456789',
+                'currency_name': 'USD',
             },
             'STALE_PAYMENTS_LIFETIME': timedelta(weeks=1)
         }
 
     @staticmethod
     def django_app():
-        return 'nodeconductor_paypal'
+        return 'waldur_paypal'
+
+    @staticmethod
+    def django_urls():
+        from .urls import urlpatterns
+        return urlpatterns
 
     @staticmethod
     def rest_urls():
@@ -38,12 +38,17 @@ class PayPalExtension(NodeConductorExtension):
         from celery.schedules import crontab
         return {
             'debit-customers': {
-                'task': 'nodeconductor.paypal.debit_customers',
+                'task': 'waldur_paypal.DebitCustomers',
                 'schedule': crontab(hour=0, minute=30),
                 'args': (),
             },
             'payments-cleanup': {
-                'task': 'nodeconductor.paypal.payments_cleanup',
+                'task': 'waldur_paypal.PaymentsCleanUp',
+                'schedule': timedelta(hours=24),
+                'args': (),
+            },
+            'send-invoices': {
+                'task': 'waldur_paypal.SendInvoices',
                 'schedule': timedelta(hours=24),
                 'args': (),
             }

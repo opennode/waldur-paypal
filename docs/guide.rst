@@ -8,7 +8,7 @@ To setup a PayPal integration, add a block of configuration as shown in the exam
 .. code-block:: python
 
     # Example of settings for billing using PayPal API.
-    NODECONDUCTOR_PAYPAL = {
+    WALDUR_PAYPAL = {
         'BACKEND': {
             'mode': 'sandbox or live',
             'client_id': '<CLIENT_ID>',

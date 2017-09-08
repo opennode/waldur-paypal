@@ -7,24 +7,22 @@ dev_requires = [
 ]
 
 install_requires = [
-    'nodeconductor>=0.107.0',
-    'paypalrestsdk>=1.10.0',
-    'xhtml2pdf>=0.0.6,<0.1b2',
-    'html5lib<0.99999999',
-    'Pillow>=2.0.0,<3.0.0',
+    'nodeconductor>=0.146.2',
+    'paypalrestsdk>=1.10.0,<2.0',
 ]
 
 
 setup(
-    name='nodeconductor-paypal',
-    version='0.5.0',
+    name='waldur-paypal',
+    version='0.6.0',
     author='OpenNode Team',
     author_email='info@opennodecloud.com',
-    url='http://nodeconductor.com',
-    description='NodeConductor PayPal allows to make payments via PayPal',
+    url='http://waldur.com',
+    description='Waldur PayPal allows to make payments via PayPal',
+    license='MIT',
     long_description=open('README.rst').read(),
     package_dir={'': 'src'},
-    packages=find_packages('src', exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
+    packages=find_packages('src'),
     install_requires=install_requires,
     zip_safe=False,
     extras_require={
@@ -32,7 +30,7 @@ setup(
     },
     entry_points={
         'nodeconductor_extensions': (
-            'nodeconductor_paypal = nodeconductor_paypal.extension:PayPalExtension',
+            'waldur_paypal = waldur_paypal.extension:PayPalExtension',
         ),
     },
     # tests_require=tests_requires,

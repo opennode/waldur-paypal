@@ -3,23 +3,30 @@ import logging
 from django.conf import settings
 from django.views.static import serve
 from django_fsm import TransitionNotAllowed
+from django.utils.translation import ugettext_lazy as _
+from rest_framework import decorators, exceptions, status, response, views
 
-from rest_framework import mixins, viewsets, permissions, decorators, exceptions, status
-from rest_framework.exceptions import NotFound
-from rest_framework.response import Response
-from rest_framework.filters import DjangoFilterBackend
+from nodeconductor.core import views as core_views
+from nodeconductor.structure import permissions as structure_permissions
 
-from nodeconductor.structure.filters import GenericRoleFilter
-from nodeconductor.structure.models import CustomerRole
-
-from .backend import PaypalBackend, PayPalError
-from .filters import InvoiceFilter, PaymentFilter
-from .log import event_logger
-from .models import Payment, Invoice
-from .serializers import PaymentSerializer, PaymentApproveSerializer, InvoiceSerializer, PaymentCancelSerializer
+from . import backend, filters, log, models, serializers
 
 
 logger = logging.getLogger(__name__)
+
+
+class ExtensionDisabled(exceptions.APIException):
+    status_code = status.HTTP_424_FAILED_DEPENDENCY
+    default_detail = _('PayPal extension is disabled.')
+
+
+class CheckExtensionMixin(object):
+    """ Raise exception if paypal extension is disabled """
+
+    def initial(self, request, *args, **kwargs):
+        if not settings.WALDUR_PAYPAL['ENABLED']:
+            raise ExtensionDisabled()
+        return super(CheckExtensionMixin, self).initial(request, *args, **kwargs)
 
 
 class CreateByStaffOrOwnerMixin(object):
@@ -27,32 +34,18 @@ class CreateByStaffOrOwnerMixin(object):
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
         customer = serializer.validated_data['customer']
-
-        if not self.request.user.is_staff and not customer.has_user(self.request.user, CustomerRole.OWNER):
+        if not structure_permissions._has_owner_access(request.user, customer):
             raise exceptions.PermissionDenied()
+
         return super(CreateByStaffOrOwnerMixin, self).create(request)
 
 
-class PaymentView(CreateByStaffOrOwnerMixin,
-                  mixins.CreateModelMixin,
-                  mixins.ListModelMixin,
-                  mixins.RetrieveModelMixin,
-                  viewsets.GenericViewSet):
-
-    queryset = Payment.objects.all()
-    serializer_class = PaymentSerializer
+class PaymentView(CheckExtensionMixin, CreateByStaffOrOwnerMixin, core_views.ProtectedViewSet):
+    queryset = models.Payment.objects.all()
+    serializer_class = serializers.PaymentSerializer
     lookup_field = 'uuid'
-    filter_backends = (
-        GenericRoleFilter,
-        DjangoFilterBackend
-    )
-    filter_class = PaymentFilter
-    permission_classes = (
-        permissions.IsAuthenticated,
-        permissions.DjangoObjectPermissions,
-    )
+    filter_class = filters.PaymentFilter
 
     def perform_create(self, serializer):
         """
@@ -65,7 +58,7 @@ class PaymentView(CreateByStaffOrOwnerMixin,
         payment = serializer.save()
 
         try:
-            backend_payment = PaypalBackend().make_payment(
+            backend_payment = payment.get_backend().make_payment(
                 payment.amount, payment.tax,
                 description='Replenish account in NodeConductor for %s' % payment.customer.name,
                 return_url=return_url,
@@ -79,13 +72,13 @@ class PaymentView(CreateByStaffOrOwnerMixin,
 
             serializer.instance = payment
 
-            event_logger.paypal_payment.info(
+            log.event_logger.paypal_payment.info(
                 'Created new payment for {customer_name}',
                 event_type='payment_creation_succeeded',
                 event_context={'payment': payment}
             )
 
-        except PayPalError as e:
+        except backend.PayPalError as e:
             message = 'Unable to create payment because of backend error %s' % e
             logger.warning(message)
             payment.set_erred()
@@ -103,13 +96,12 @@ class PaymentView(CreateByStaffOrOwnerMixin,
         error_message = "Payment with token %s does not exist" % token
 
         try:
-            payment = Payment.objects.get(token=token)
-        except Payment.DoesNotExist:
-            raise NotFound(error_message)
+            payment = models.Payment.objects.get(token=token)
+        except models.Payment.DoesNotExist:
+            raise exceptions.NotFound(error_message)
 
-        is_owner = payment.customer.has_user(self.request.user, CustomerRole.OWNER)
-        if not self.request.user.is_staff and not is_owner:
-            raise NotFound(error_message)
+        if not structure_permissions._has_owner_access(self.request.user, payment.customer):
+            raise exceptions.NotFound(error_message)
 
         return payment
 
@@ -118,7 +110,7 @@ class PaymentView(CreateByStaffOrOwnerMixin,
         """
         Approve Paypal payment.
         """
-        serializer = PaymentApproveSerializer(data=request.data)
+        serializer = serializers.PaymentApproveSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         payment_id = serializer.validated_data['payment_id']
@@ -127,21 +119,20 @@ class PaymentView(CreateByStaffOrOwnerMixin,
         payment = self.get_payment(token)
 
         try:
-            PaypalBackend().approve_payment(payment_id, payer_id)
+            payment.get_backend().approve_payment(payment_id, payer_id)
 
-            payment.customer.credit_account(payment.amount)
             payment.set_approved()
             payment.error_message = ''
             payment.save()
 
-            event_logger.paypal_payment.info(
+            log.event_logger.paypal_payment.info(
                 'Payment for {customer_name} has been approved.',
                 event_type='payment_approval_succeeded',
                 event_context={'payment': payment}
             )
-            return Response({'detail': 'Payment has been approved.'}, status=status.HTTP_200_OK)
+            return response.Response({'detail': 'Payment has been approved.'}, status=status.HTTP_200_OK)
 
-        except PayPalError as e:
+        except backend.PayPalError as e:
             message = 'Unable to approve payment because of backend error %s' % e
             logger.warning(message)
             payment.error_message = message
@@ -153,15 +144,14 @@ class PaymentView(CreateByStaffOrOwnerMixin,
             payment.set_erred()
             payment.error_message = message
             payment.save()
-            return Response({'detail': message},
-                            status=status.HTTP_409_CONFLICT)
+            return response.Response({'detail': message}, status=status.HTTP_409_CONFLICT)
 
     @decorators.list_route(methods=['POST'])
     def cancel(self, request):
         """
         Cancel Paypal payment.
         """
-        serializer = PaymentCancelSerializer(data=request.data)
+        serializer = serializers.PaymentCancelSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         token = serializer.validated_data['token']
@@ -171,31 +161,23 @@ class PaymentView(CreateByStaffOrOwnerMixin,
             payment.set_cancelled()
             payment.save()
 
-            event_logger.paypal_payment.info(
+            log.event_logger.paypal_payment.info(
                 'Payment for {customer_name} has been cancelled.',
                 event_type='payment_cancel_succeeded',
                 event_context={'payment': payment}
             )
-            return Response({'detail': 'Payment has been cancelled.'}, status=status.HTTP_200_OK)
+            return response.Response({'detail': 'Payment has been cancelled.'}, status=status.HTTP_200_OK)
 
         except TransitionNotAllowed:
-            return Response({'detail': 'Unable to cancel payment because of invalid state.'},
+            return response.Response({'detail': 'Unable to cancel payment because of invalid state.'},
                             status=status.HTTP_409_CONFLICT)
 
 
-class InvoicesViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Invoice.objects.all()
-    serializer_class = InvoiceSerializer
+class InvoicesViewSet(CheckExtensionMixin, core_views.ReadOnlyActionsViewSet):
+    queryset = models.Invoice.objects.all()
+    serializer_class = serializers.InvoiceSerializer
     lookup_field = 'uuid'
-    filter_backends = (
-        GenericRoleFilter,
-        DjangoFilterBackend
-    )
-    filter_class = InvoiceFilter
-    permission_classes = (
-        permissions.IsAuthenticated,
-        permissions.DjangoObjectPermissions,
-    )
+    filter_class = filters.InvoiceFilter
 
     def _serve_pdf(self, request, pdf):
         if not pdf:
@@ -212,3 +194,25 @@ class InvoicesViewSet(viewsets.ReadOnlyModelViewSet):
     @decorators.detail_route()
     def pdf(self, request, uuid=None):
         return self._serve_pdf(request, self.get_object().pdf)
+
+
+class InvoiceWebHookViewSet(CheckExtensionMixin, views.APIView):
+    authentication_classes = ()
+    permission_classes = ()
+    serializer_class = serializers.InvoiceUpdateWebHookSerializer
+    valid_event_types = [
+        'INVOICING.INVOICE.CANCELLED',
+        'INVOICING.INVOICE.PAID',
+        'INVOICING.INVOICE.REFUNDED',
+        'INVOICING.INVOICE.UPDATED',
+        # 'INVOICING.INVOICE.CREATED', No need to update created Invoice
+    ]
+
+    def post(self, request, *args, **kwargs):
+        if request.data.get('event_type') not in self.valid_event_types:
+            return response.Response(status=status.HTTP_304_NOT_MODIFIED)
+
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return response.Response(status=status.HTTP_200_OK)
