@@ -1,13 +1,13 @@
 Name: waldur-paypal
 Summary: PayPal plugin for Waldur
 Group: Development/Libraries
-Version: 0.6.0
+Version: 0.6.1
 Release: 1.el7
 License: MIT
 Url: http://waldur.com
 Source0: %{name}-%{version}.tar.gz
 
-Requires: waldur-core >= 0.146.2
+Requires: waldur-core >= 0.146.5
 Requires: python-paypal-rest-sdk >= 1.10.0, python-paypal-rest-sdk < 2.0
 
 BuildArch: noarch
@@ -35,6 +35,9 @@ rm -rf %{buildroot}
 %defattr(-,root,root)
 
 %changelog
+* Tue Sep 19 2017 Jenkins <jenkins@opennodecloud.com> - 0.6.1-1.el7
+- New upstream release
+
 * Fri Sep 8 2017 Jenkins <jenkins@opennodecloud.com> - 0.6.0-1.el7
 - New upstream release
 
