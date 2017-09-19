@@ -15,8 +15,6 @@ def override_paypal_settings(**kwargs):
 def convert_unit_of_measure(unit):
     if unit.lower() == 'quantity':
         return models.InvoiceItem.UnitsOfMeasure.QUANTITY
-    elif unit.lower() == 'amount':
-        return models.InvoiceItem.UnitsOfMeasure.AMOUNT
     else:
         return models.InvoiceItem.UnitsOfMeasure.HOURS
 
