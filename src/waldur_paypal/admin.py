@@ -3,7 +3,7 @@ import logging
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 
-from nodeconductor.core.admin import ExecutorAdminAction
+from nodeconductor.core.admin import ExecutorAdminAction, UpdateOnlyModelAdmin
 from nodeconductor.structure import admin as structure_admin
 
 from . import models, executors
@@ -11,15 +11,9 @@ from . import models, executors
 logger = logging.getLogger(__name__)
 
 
-class InvoiceItemInline(admin.TabularInline):
+class InvoiceItemInline(UpdateOnlyModelAdmin, admin.TabularInline):
     model = models.InvoiceItem
     readonly_fields = ('name', 'price', 'unit_price', 'unit_of_measure', 'start', 'end', 'tax', 'quantity')
-
-    def has_add_permission(self, request, obj=None):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return False
 
 
 class InvoiceAdmin(structure_admin.BackendModelAdmin):
