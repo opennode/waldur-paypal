@@ -3,7 +3,7 @@ import logging
 from nodeconductor.logging import models as logging_models
 
 from .log import event_logger
-from . import models
+from . import models, helpers
 
 
 logger = logging.getLogger(__name__)
@@ -86,9 +86,9 @@ def create_invoice(sender, invoice, issuer_details, **kwargs):
             invoice=paypal_invoice,
             price=item.price,
             tax=item.tax,
-            quantity=item.usage_days * 24,
+            quantity=helpers.get_invoice_item_quantity(item),
             unit_price=item.unit_price,
-            unit_of_measure=models.InvoiceItem.UnitsOfMeasure.HOURS,
+            unit_of_measure=helpers.convert_unit_of_measure(item.unit),
             name=item.name,
             start=item.start,
             end=item.end)

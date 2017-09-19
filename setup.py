@@ -7,7 +7,7 @@ dev_requires = [
 ]
 
 install_requires = [
-    'nodeconductor>=0.146.2',
+    'nodeconductor>=0.146.5',
     'paypalrestsdk>=1.10.0,<2.0',
 ]
 
