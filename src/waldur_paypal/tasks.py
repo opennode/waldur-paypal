@@ -1,6 +1,7 @@
 import logging
 from datetime import timedelta, datetime
 
+from celery import Task as CeleryTask
 from django.conf import settings
 from django.utils import timezone
 
@@ -12,7 +13,29 @@ from . import models, executors
 logger = logging.getLogger(__name__)
 
 
-class DebitCustomers(core_tasks.BackgroundTask):
+# TODO: Move this mixin to Waldur Core
+class ExtensionTaskMixin(CeleryTask):
+    """
+    This mixin allows to skip task scheduling if extension is disabled.
+    Subclasses should implement "is_extension_disabled" method which returns boolean value.
+    """
+    def is_extension_disabled(self):
+        return False
+
+    def apply_async(self, args=None, kwargs=None, **options):
+        if self.is_extension_disabled():
+            message = 'Task %s is not scheduled, because its extension is disabled.' % self.name
+            logger.info(message)
+            return self.AsyncResult(options.get('task_id'))
+        return super(ExtensionTaskMixin, self).apply_async(args=args, kwargs=kwargs, **options)
+
+
+class PaypalTaskMixin(ExtensionTaskMixin):
+    def is_extension_disabled(self):
+        return not settings.WALDUR_PAYPAL['ENABLED']
+
+
+class DebitCustomers(PaypalTaskMixin, core_tasks.BackgroundTask):
     """ Fetch a list of shared services (services based on shared settings).
         Calculate the amount of consumed resources "yesterday" (make sure this task executed only once a day)
         Reduce customer's balance accordingly
@@ -46,7 +69,7 @@ class DebitCustomers(core_tasks.BackgroundTask):
                     resource.customer.debit_account(data['total_amount'])
 
 
-class PaymentsCleanUp(core_tasks.BackgroundTask):
+class PaymentsCleanUp(PaypalTaskMixin, core_tasks.BackgroundTask):
     name = 'waldur_paypal.PaymentsCleanUp'
 
     def is_equal(self, other_task, *args, **kwargs):
@@ -57,7 +80,7 @@ class PaymentsCleanUp(core_tasks.BackgroundTask):
         models.Payment.objects.filter(state=models.Payment.States.CREATED, created__lte=timezone.now() - timespan).delete()
 
 
-class SendInvoices(core_tasks.BackgroundTask):
+class SendInvoices(PaypalTaskMixin, core_tasks.BackgroundTask):
     name = 'waldur_paypal.SendInvoices'
 
     def is_equal(self, other_task, *args, **kwargs):
