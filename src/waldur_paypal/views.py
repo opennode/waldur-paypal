@@ -60,7 +60,7 @@ class PaymentView(CheckExtensionMixin, CreateByStaffOrOwnerMixin, core_views.Pro
         try:
             backend_payment = payment.get_backend().make_payment(
                 payment.amount, payment.tax,
-                description='Replenish account in NodeConductor for %s' % payment.customer.name,
+                description='Replenish account in Waldur for %s' % payment.customer.name,
                 return_url=return_url,
                 cancel_url=cancel_url)
 
