@@ -3,7 +3,7 @@ import mock
 
 from rest_framework import test, status
 
-from nodeconductor.structure.tests import fixtures as structure_fixtures, factories as structure_factories
+from waldur_core.structure.tests import fixtures as structure_fixtures, factories as structure_factories
 from waldur_paypal.backend import PaypalPayment, PayPalError
 from waldur_paypal.helpers import override_paypal_settings
 from waldur_paypal.models import Payment

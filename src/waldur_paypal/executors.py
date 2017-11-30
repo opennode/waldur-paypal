@@ -1,6 +1,6 @@
 from celery import chain
 
-from nodeconductor.core import executors as core_executors, tasks as core_tasks
+from waldur_core.core import executors as core_executors, tasks as core_tasks
 
 
 class InvoiceCreateExecutor(core_executors.BaseExecutor):

@@ -7,7 +7,7 @@ dev_requires = [
 ]
 
 install_requires = [
-    'nodeconductor>=0.146.5',
+    'waldur_core>=0.146.5',
     'paypalrestsdk>=1.10.0,<2.0',
 ]
 
@@ -29,7 +29,7 @@ setup(
         'dev': dev_requires,
     },
     entry_points={
-        'nodeconductor_extensions': (
+        'waldur_extensions': (
             'waldur_paypal = waldur_paypal.extension:PayPalExtension',
         ),
     },

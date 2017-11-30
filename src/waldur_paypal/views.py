@@ -6,8 +6,8 @@ from django_fsm import TransitionNotAllowed
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import decorators, exceptions, status, response, views
 
-from nodeconductor.core import views as core_views
-from nodeconductor.structure import permissions as structure_permissions
+from waldur_core.core import views as core_views
+from waldur_core.structure import permissions as structure_permissions
 
 from . import backend, filters, log, models, serializers
 

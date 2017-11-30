@@ -9,7 +9,7 @@ class PayPalConfig(AppConfig):
 
     def ready(self):
         from . import handlers
-        from nodeconductor.cost_tracking import signals as cost_signals
+        from waldur_core.cost_tracking import signals as cost_signals
 
         Invoice = self.get_model('Invoice')
         User = get_user_model()

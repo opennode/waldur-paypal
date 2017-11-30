@@ -4,7 +4,7 @@ from factory import fuzzy
 from django.core.urlresolvers import reverse
 from django.utils import timezone
 
-from nodeconductor.structure.tests import factories as structure_factories
+from waldur_core.structure.tests import factories as structure_factories
 
 from waldur_paypal import models
 

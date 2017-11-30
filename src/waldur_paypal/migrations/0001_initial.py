@@ -8,9 +8,9 @@ import django.db.models.deletion
 import django.utils.timezone
 import django_fsm
 import model_utils.fields
-import nodeconductor.core.fields
-import nodeconductor.core.models
-import nodeconductor.logging.loggers
+import waldur_core.core.fields
+import waldur_core.core.models
+import waldur_core.logging.loggers
 
 
 class Migration(migrations.Migration):
@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
             name='Invoice',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('uuid', nodeconductor.core.fields.UUIDField()),
+                ('uuid', waldur_core.core.fields.UUIDField()),
                 ('state', models.CharField(choices=[('DRAFT', 'Draft'), ('SENT', 'Sent'), ('PAID', 'Paid'), ('MARKED_AS_PAID', 'Marked as paid'), ('CANCELLED', 'Cancelled'), ('REFUNDED', 'Refunded'), ('PARTIALLY_REFUNDED', 'Partially refunded'), ('MARKED_AS_REFUNDED', 'Marked as refunded'), ('UNPAID', 'Unpaid'), ('PAYMENT_PENDING', 'Payment pending')], default='DRAFT', max_length=30)),
                 ('invoice_date', models.DateField()),
                 ('end_date', models.DateField()),
@@ -34,8 +34,8 @@ class Migration(migrations.Migration):
                 ('number', models.CharField(max_length=30)),
                 ('tax_percent', models.DecimalField(decimal_places=2, default=0, max_digits=4, validators=[django.core.validators.MinValueValidator(0), django.core.validators.MaxValueValidator(100)])),
                 ('backend_id', models.CharField(blank=True, max_length=128)),
-                ('issuer_details', nodeconductor.core.fields.JSONField(blank=True, default={}, help_text='Stores data about invoice issuer')),
-                ('payment_details', nodeconductor.core.fields.JSONField(blank=True, default={}, help_text='Stores data about customer payment details')),
+                ('issuer_details', waldur_core.core.fields.JSONField(blank=True, default={}, help_text='Stores data about invoice issuer')),
+                ('payment_details', waldur_core.core.fields.JSONField(blank=True, default={}, help_text='Stores data about customer payment details')),
                 ('month', models.PositiveSmallIntegerField(validators=[django.core.validators.MinValueValidator(1), django.core.validators.MaxValueValidator(12)])),
                 ('year', models.PositiveSmallIntegerField()),
                 ('customer', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='paypal_invoices', to='structure.Customer')),
@@ -43,7 +43,7 @@ class Migration(migrations.Migration):
             options={
                 'ordering': ['-invoice_date'],
             },
-            bases=(nodeconductor.logging.loggers.LoggableMixin, models.Model, nodeconductor.core.models.BackendModelMixin),
+            bases=(waldur_core.logging.loggers.LoggableMixin, models.Model, waldur_core.core.models.BackendModelMixin),
         ),
         migrations.CreateModel(
             name='InvoiceItem',
@@ -69,7 +69,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
                 ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
-                ('uuid', nodeconductor.core.fields.UUIDField()),
+                ('uuid', waldur_core.core.fields.UUIDField()),
                 ('error_message', models.TextField(blank=True)),
                 ('state', django_fsm.FSMIntegerField(choices=[(0, 'Initial'), (1, 'Created'), (2, 'Approved'), (4, 'Erred')], default=0)),
                 ('amount', models.DecimalField(decimal_places=2, max_digits=9)),
@@ -82,6 +82,6 @@ class Migration(migrations.Migration):
             options={
                 'ordering': ['-modified'],
             },
-            bases=(nodeconductor.logging.loggers.LoggableMixin, models.Model),
+            bases=(waldur_core.logging.loggers.LoggableMixin, models.Model),
         ),
     ]
