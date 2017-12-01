@@ -7,7 +7,7 @@ dev_requires = [
 ]
 
 install_requires = [
-    'waldur_core>=0.146.5',
+    'waldur-core>=0.151.0',
     'paypalrestsdk>=1.10.0,<2.0',
 ]
 
