@@ -2,10 +2,10 @@ from __future__ import absolute_import
 
 from datetime import timedelta
 
-from nodeconductor.core import NodeConductorExtension
+from waldur_core.core import WaldurExtension
 
 
-class PayPalExtension(NodeConductorExtension):
+class PayPalExtension(WaldurExtension):
 
     class Settings(object):
         WALDUR_PAYPAL = {

@@ -7,14 +7,14 @@ dev_requires = [
 ]
 
 install_requires = [
-    'nodeconductor>=0.146.5',
+    'waldur-core>=0.151.0',
     'paypalrestsdk>=1.10.0,<2.0',
 ]
 
 
 setup(
     name='waldur-paypal',
-    version='0.6.2',
+    version='0.6.3',
     author='OpenNode Team',
     author_email='info@opennodecloud.com',
     url='http://waldur.com',
@@ -29,7 +29,7 @@ setup(
         'dev': dev_requires,
     },
     entry_points={
-        'nodeconductor_extensions': (
+        'waldur_extensions': (
             'waldur_paypal = waldur_paypal.extension:PayPalExtension',
         ),
     },

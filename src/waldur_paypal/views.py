@@ -6,8 +6,8 @@ from django_fsm import TransitionNotAllowed
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import decorators, exceptions, status, response, views
 
-from nodeconductor.core import views as core_views
-from nodeconductor.structure import permissions as structure_permissions
+from waldur_core.core import views as core_views
+from waldur_core.structure import permissions as structure_permissions
 
 from . import backend, filters, log, models, serializers
 
@@ -60,7 +60,7 @@ class PaymentView(CheckExtensionMixin, CreateByStaffOrOwnerMixin, core_views.Pro
         try:
             backend_payment = payment.get_backend().make_payment(
                 payment.amount, payment.tax,
-                description='Replenish account in NodeConductor for %s' % payment.customer.name,
+                description='Replenish account in Waldur for %s' % payment.customer.name,
                 return_url=return_url,
                 cancel_url=cancel_url)
 

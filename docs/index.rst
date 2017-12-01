@@ -1,7 +1,7 @@
-Welcome to NodeConductor PayPal plugin's documentation!
-=======================================================
+Welcome to Waldur PayPal plugin's documentation!
+================================================
 
-NodeConductor PayPal allows to make payments via PayPal.
+Waldur PayPal allows to make payments via PayPal.
 
 Guide
 -----
@@ -31,7 +31,7 @@ Endpoints
 License
 -------
 
-NodeConductor PayPal plugin is open-source under MIT license.
+Waldur PayPal plugin is open-source under MIT license.
 
 Indices and tables
 ==================

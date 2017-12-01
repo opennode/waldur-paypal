@@ -1,6 +1,7 @@
 import logging
 
-from nodeconductor.logging import models as logging_models
+from django.db import transaction
+from waldur_core.logging import models as logging_models
 
 from .log import event_logger
 from . import models, helpers
@@ -36,19 +37,21 @@ def log_invoice_delete(sender, instance, **kwargs):
 
 
 def add_email_hooks_to_user(sender, instance, created, **kwargs):
-    if not created:
+    if not created or not instance.tracker.has_changed('email') or not instance.email:
         return
+
     event_types = ['invoice_creation_succeeded', 'payment_creation_succeeded',
                    'payment_approval_succeeded', 'payment_cancel_succeeded']
     user = instance
-    if not user.email:
-        logger.warn('Cannot add default email hooks to user %s (PK: %s). He does not have email.', user, user.pk)
 
-    logging_models.EmailHook.objects.create(
-        user=user,
-        event_types=event_types,
-        email=user.email,
-    )
+    with transaction.atomic():
+        logging_models.EmailHook.objects.update_or_create(
+            user=user,
+            defaults={
+                'event_types': event_types,
+                'email': user.email
+            }
+        )
 
 
 def create_invoice(sender, invoice, issuer_details, **kwargs):

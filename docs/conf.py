@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# NodeConductor PayPal documentation build configuration file, created by
+# Waldur PayPal documentation build configuration file, created by
 # sphinx-quickstart on Sat Oct 31 15:56:13 2015.
 #
 # This file is execfile()d with the current directory set to its
@@ -43,7 +43,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'NodeConductor PayPal'
+project = u'Waldur PayPal'
 copyright = u'2015, OpenNode'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -198,7 +198,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'NodeConductorPayPal.tex', u'NodeConductor PayPal Documentation',
+  ('index', 'NodeConductorPayPal.tex', u'Waldur PayPal Documentation',
    u'OpenNode', 'manual'),
 ]
 
@@ -228,7 +228,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'NodeConductor PayPal', u'NodeConductor PayPal Documentation',
+    ('index', 'Waldur PayPal', u'Waldur PayPal Documentation',
      [u'OpenNode'], 1)
 ]
 
@@ -242,7 +242,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'NodeConductorPayPal', u'NodeConductor PayPal Documentation',
+  ('index', 'NodeConductorPayPal', u'Waldur PayPal Documentation',
    u'OpenNode', 'NodeConductorPayPal', 'One line description of project.',
    'Miscellaneous'),
 ]
@@ -259,7 +259,7 @@ texinfo_documents = [
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
 
-os.environ['DJANGO_SETTINGS_MODULE'] = 'nodeconductor.server.doc_settings'
+os.environ['DJANGO_SETTINGS_MODULE'] = 'waldur_core.server.doc_settings'
 from django.conf import settings
 settings.INSTALLED_APPS = [app for app in settings.INSTALLED_APPS if not app.endswith('tests')]
 settings.BASE_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
@@ -267,5 +267,5 @@ settings.BASE_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 from django.core.wsgi import get_wsgi_application
 get_wsgi_application()
 
-from nodeconductor.core.management.commands.drfdocs import Command
+from waldur_core.core.management.commands.drfdocs import Command
 Command().handle('waldur_paypal', path='docs/drfapi')
