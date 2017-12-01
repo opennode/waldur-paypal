@@ -5,8 +5,8 @@ from celery import Task as CeleryTask
 from django.conf import settings
 from django.utils import timezone
 
-from nodeconductor.core import tasks as core_tasks
-from nodeconductor.structure import SupportedServices
+from waldur_core.core import tasks as core_tasks
+from waldur_core.structure import SupportedServices
 
 from . import models, executors
 

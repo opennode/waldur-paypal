@@ -2,13 +2,13 @@ Installation
 ------------
 
  * `Install NodeConductor <http://nodeconductor.readthedocs.org/en/latest/guide/intro.html#installation-from-source>`_
- * Clone NodeConductor PayPal
+ * Clone Waldur PayPal
 
   .. code-block:: bash
 
-    git clone git@code.opennodecloud.com:nodeconductor/nodeconductor-paypal.git
+    git clone git@code.opennodecloud.com:waldur/waldur-paypal.git
 
- * Install NodeConductor PayPal into NodeConductor virtual environment
+ * Install Waldur PayPal into Waldur virtual environment
 
   .. code-block:: bash
 

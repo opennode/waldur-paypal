@@ -9,10 +9,10 @@ from django_fsm import transition, FSMIntegerField
 from django.utils.translation import ugettext_lazy as _
 from model_utils.models import TimeStampedModel
 
-from nodeconductor.core.fields import JSONField
-from nodeconductor.core.models import UuidMixin, ErrorMessageMixin, BackendModelMixin
-from nodeconductor.logging.loggers import LoggableMixin
-from nodeconductor.structure.models import Customer
+from waldur_core.core.fields import JSONField
+from waldur_core.core.models import UuidMixin, ErrorMessageMixin, BackendModelMixin
+from waldur_core.logging.loggers import LoggableMixin
+from waldur_core.structure.models import Customer
 
 
 from . import backend

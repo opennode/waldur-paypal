@@ -7,7 +7,7 @@ License: MIT
 Url: http://waldur.com
 Source0: %{name}-%{version}.tar.gz
 
-Requires: waldur-core >= 0.146.5
+Requires: waldur-core >= 0.151.0
 Requires: python-paypal-rest-sdk >= 1.10.0, python-paypal-rest-sdk < 2.0
 
 BuildArch: noarch

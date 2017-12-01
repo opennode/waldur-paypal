@@ -3,8 +3,8 @@ import logging
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 
-from nodeconductor.core.admin import ExecutorAdminAction, UpdateOnlyModelAdmin
-from nodeconductor.structure import admin as structure_admin
+from waldur_core.core.admin import ExecutorAdminAction, UpdateOnlyModelAdmin
+from waldur_core.structure import admin as structure_admin
 
 from . import models, executors
 
