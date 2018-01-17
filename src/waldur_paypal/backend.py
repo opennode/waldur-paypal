@@ -100,7 +100,7 @@ class PaypalBackend(object):
                     'line1': invoice.issuer_details.get('address'),
                     'city': invoice.issuer_details.get('city'),
                     'state': invoice.issuer_details.get('state'),
-                    'postal_code': invoice.issuer_details.get('email'),
+                    'postal_code': invoice.issuer_details.get('postal'),
                     'country_code': invoice.issuer_details.get('country_code')
                 }
             },
