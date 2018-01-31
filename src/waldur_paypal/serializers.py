@@ -77,13 +77,13 @@ class InvoiceSerializer(core_serializers.AugmentedSerializerMixin,
     items = InvoiceItemSerializer(many=True, read_only=True)
     payment_url = serializers.SerializerMethodField()
     issuer_details = serializers.JSONField()
-    payment_details = serializers.JSONField()
+    customer_details = serializers.JSONField(source='payment_details')
 
     class Meta(object):
         model = models.Invoice
         fields = (
             'url', 'uuid', 'total', 'price', 'tax', 'pdf', 'backend_id', 'issuer_details',
-            'invoice_date', 'end_date', 'state', 'items', 'payment_url', 'payment_details',
+            'invoice_date', 'end_date', 'state', 'items', 'payment_url', 'customer_details',
             'customer', 'customer_uuid', 'customer_name', 'year', 'month', 'number',
         )
         related_paths = ('customer',)

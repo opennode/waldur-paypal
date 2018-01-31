@@ -134,20 +134,12 @@ class PaypalBackend(object):
                     'percent': self._format_decimal(invoice.tax_percent),
                 }
 
-        if hasattr(invoice.customer, 'payment_details'):
-            payment_details = invoice.customer.payment_details
-            invoice_details['billing_info'] = [
-                {
-                    'email': payment_details.email,
-                    'business_name': payment_details.company,
-                }
-            ]
-        else:
-            invoice_details['billing_info'] = [
-                {
-                    'email': invoice.customer.email,
-                }
-            ]
+        invoice_details['billing_info'] = [
+            {
+                'email': invoice.customer.email,
+                'business_name': invoice.customer.name,
+            }
+        ]
 
         backend_invoice = paypal.Invoice(invoice_details)
 
