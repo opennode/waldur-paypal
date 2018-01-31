@@ -91,6 +91,6 @@ class CreateInvoiceTest(TestCase):
             self.assertEqual(created_item.start, original_item.start)
             self.assertEqual(created_item.end, original_item.end)
             self.assertEqual(created_item.tax, original_item.tax)
-            self.assertEqual(created_item.unit_of_measure, models.InvoiceItem.UnitsOfMeasure.HOURS)
-            self.assertEqual(created_item.quantity, original_item.usage_days * 24)
+            self.assertEqual(created_item.unit_of_measure, models.InvoiceItem.UnitsOfMeasure.AMOUNT)
+            self.assertEqual(created_item.quantity, original_item.usage_days)
 
