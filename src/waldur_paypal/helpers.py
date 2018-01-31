@@ -13,15 +13,14 @@ def override_paypal_settings(**kwargs):
 
 
 def convert_unit_of_measure(unit):
-    if unit.lower() == 'quantity':
+    if unit == 'quantity':
         return models.InvoiceItem.UnitsOfMeasure.QUANTITY
     else:
-        return models.InvoiceItem.UnitsOfMeasure.HOURS
+        return models.InvoiceItem.UnitsOfMeasure.AMOUNT
 
 
 def get_invoice_item_quantity(item):
-    unit_of_measure = convert_unit_of_measure(item.unit)
-    if unit_of_measure == models.InvoiceItem.UnitsOfMeasure.HOURS:
-        return item.usage_days * 24
-    else:
+    if item.unit == 'quantity':
         return item.quantity
+    else:
+        return item.usage_days
