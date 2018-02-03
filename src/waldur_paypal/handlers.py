@@ -70,17 +70,17 @@ def create_invoice(sender, invoice, issuer_details, **kwargs):
         tax_percent=invoice.tax_percent,
         issuer_details=issuer_details)
 
-    if hasattr(invoice.customer, 'payment_details'):
-        payment_details = invoice.customer.payment_details
-        paypal_invoice.payment_details = {
-            'company': payment_details.company,
-            'address': payment_details.address,
-            'country': payment_details.country,
-            'email': payment_details.email,
-            'postal': payment_details.postal,
-            'phone': payment_details.phone,
-            'bank': payment_details.bank,
-        }
+    paypal_invoice.payment_details = {
+        'name': invoice.customer.name,
+        'address': invoice.customer.address,
+        'country': invoice.customer.country,
+        'country_name': invoice.customer.get_country_display(),
+        'email': invoice.customer.email,
+        'postal': invoice.customer.postal,
+        'phone_number': invoice.customer.phone_number,
+        'bank_name': invoice.customer.bank_name,
+        'bank_account': invoice.customer.bank_account,
+    }
 
     paypal_invoice.save()
 
