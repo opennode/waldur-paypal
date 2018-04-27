@@ -93,4 +93,3 @@ class CreateInvoiceTest(TestCase):
             self.assertEqual(created_item.tax, original_item.tax)
             self.assertEqual(created_item.unit_of_measure, models.InvoiceItem.UnitsOfMeasure.AMOUNT)
             self.assertEqual(created_item.quantity, original_item.usage_days)
-

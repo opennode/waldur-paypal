@@ -1,5 +1,4 @@
 import factory
-from factory import fuzzy
 
 from django.core.urlresolvers import reverse
 from django.utils import timezone

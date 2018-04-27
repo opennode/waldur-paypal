@@ -420,6 +420,6 @@ class PaypalBackend(object):
             ))
 
         invoice_url = self.get_payment_view_url(invoice.backend_id, {'printPdfMode': 'true'})
-        response = urllib2.urlopen(invoice_url) # nosec
+        response = urllib2.urlopen(invoice_url)  # nosec
         content = response.read()
         invoice.pdf.save(invoice.file_name, ContentFile(content), save=True)
