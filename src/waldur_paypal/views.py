@@ -170,7 +170,7 @@ class PaymentView(CheckExtensionMixin, CreateByStaffOrOwnerMixin, core_views.Pro
 
         except TransitionNotAllowed:
             return response.Response({'detail': 'Unable to cancel payment because of invalid state.'},
-                            status=status.HTTP_409_CONFLICT)
+                                     status=status.HTTP_409_CONFLICT)
 
 
 class InvoicesViewSet(CheckExtensionMixin, core_views.ReadOnlyActionsViewSet):
