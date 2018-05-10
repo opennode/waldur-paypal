@@ -37,5 +37,6 @@ class InvoiceAdmin(structure_admin.BackendModelAdmin):
 class PaymentAdmin(admin.ModelAdmin):
     list_display = ['customer', 'amount', 'state', 'backend_id']
 
+
 admin.site.register(models.Invoice, InvoiceAdmin)
 admin.site.register(models.Payment, PaymentAdmin)

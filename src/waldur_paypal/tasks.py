@@ -1,12 +1,12 @@
 import logging
 from datetime import timedelta, datetime
 
-from celery import Task as CeleryTask
 from django.conf import settings
 from django.utils import timezone
 
 from waldur_core.core import tasks as core_tasks
 from waldur_core.structure import SupportedServices
+from waldur_core.core.task_celery_old import CeleryTaskWithAutoRegister
 
 from . import models, executors
 
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 # TODO: Move this mixin to Waldur Core
-class ExtensionTaskMixin(CeleryTask):
+class ExtensionTaskMixin(CeleryTaskWithAutoRegister):
     """
     This mixin allows to skip task scheduling if extension is disabled.
     Subclasses should implement "is_extension_disabled" method which returns boolean value.

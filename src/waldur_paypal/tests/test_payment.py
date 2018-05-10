@@ -41,9 +41,9 @@ class PaymentCreateTest(BasePaymentTest):
                 backend().make_payment.side_effect = PayPalError()
             else:
                 backend().make_payment.return_value = PaypalPayment(
-                        payment_id='PAY-6RV70583SB702805EKEYSZ6Y',
-                        approval_url=self.valid_response['approval_url'],
-                        token=self.valid_response['token'])
+                    payment_id='PAY-6RV70583SB702805EKEYSZ6Y',
+                    approval_url=self.valid_response['approval_url'],
+                    token=self.valid_response['token'])
 
             self.client.force_authenticate(user)
             return self.client.post(factories.PaypalPaymentFactory.get_list_url(), data=self.valid_request)
