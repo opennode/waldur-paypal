@@ -61,6 +61,15 @@ def create_invoice(sender, invoice, issuer_details, **kwargs):
     :param invoice: Invoice instance
     :param issuer_details: details about issuer
     """
+    if not invoice.items:
+        return
+
+    price = reduce((lambda x, y: x + y), [item.price for item in invoice.items])
+    
+    if not price:
+        return
+
+
     paypal_invoice = models.Invoice(
         customer=invoice.customer,
         year=invoice.year,
