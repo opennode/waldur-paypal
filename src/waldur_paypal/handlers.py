@@ -64,7 +64,7 @@ def create_invoice(sender, invoice, issuer_details, **kwargs):
     if not invoice.items:
         return
 
-    price = reduce((lambda x, y: x + y), [item.price for item in invoice.items])
+    price = sum([item.price for item in invoice.items])
 
     if not price:
         return
