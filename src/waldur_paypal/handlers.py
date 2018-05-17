@@ -65,10 +65,9 @@ def create_invoice(sender, invoice, issuer_details, **kwargs):
         return
 
     price = reduce((lambda x, y: x + y), [item.price for item in invoice.items])
-    
+
     if not price:
         return
-
 
     paypal_invoice = models.Invoice(
         customer=invoice.customer,
