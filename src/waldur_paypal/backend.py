@@ -78,6 +78,12 @@ class PaypalBackend(object):
         if invoice.backend_id:
             return
 
+        if not invoice.items.count():
+            raise PayPalError('"items" size must be between 1 and 100.')
+
+        if not invoice.price:
+            raise PayPalError('The total cost must not be zero.')
+
         phone = invoice.issuer_details.get('phone', {})
         if not phone:
             raise PayPalError('"phone" is a required attribute')
