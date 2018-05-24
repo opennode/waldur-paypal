@@ -6,7 +6,8 @@ from django.urls import reverse
 from rest_framework import status
 
 from waldur_paypal.helpers import override_paypal_settings
-from waldur_paypal.tests import fixtures
+from waldur_paypal.tests import fixtures, factories
+from waldur_paypal.backend import PaypalBackend, PayPalError
 
 
 @override_paypal_settings(ENABLED=True)
@@ -57,3 +58,14 @@ class InvoiceWebhookTest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_304_NOT_MODIFIED)
         self.invoice.refresh_from_db()
         self.assertEqual(self.invoice.state, expected_state)
+
+
+@override_paypal_settings(ENABLED=True)
+class InvoiceBackendTest(TestCase):
+    def setUp(self):
+        self.invoice = factories.InvoiceFactory()
+        self.invoice.backend_id = ''
+        self.backend = PaypalBackend()
+
+    def test_dont_send_invoice_in_backend_if_cost_is_zero(self):
+        self.assertRaises(PayPalError, self.backend.create_invoice, self.invoice)
