@@ -1,7 +1,7 @@
 Name: waldur-paypal
 Summary: PayPal plugin for Waldur
 Group: Development/Libraries
-Version: 0.8.2
+Version: 0.9.0
 Release: 1.el7
 License: MIT
 Url: http://waldur.com
@@ -35,6 +35,9 @@ rm -rf %{buildroot}
 %defattr(-,root,root)
 
 %changelog
+* Tue Jun 26 2018 Jenkins <jenkins@opennodecloud.com> - 0.9.0-1.el7
+- New upstream release
+
 * Fri Jun 1 2018 Jenkins <jenkins@opennodecloud.com> - 0.8.2-1.el7
 - New upstream release
 
