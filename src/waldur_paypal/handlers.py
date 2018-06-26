@@ -1,5 +1,6 @@
 import logging
 
+from django.conf import settings
 from django.db import transaction
 from waldur_core.logging import models as logging_models
 
@@ -37,6 +38,9 @@ def log_invoice_delete(sender, instance, **kwargs):
 
 
 def add_email_hooks_to_user(sender, instance, created, **kwargs):
+    if not settings.WALDUR_PAYPAL['ENABLED']:
+        return
+
     if not created or not instance.tracker.has_changed('email') or not instance.email:
         return
 
