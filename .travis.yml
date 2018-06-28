@@ -15,5 +15,5 @@ deploy:
     secure: BemdI8OqaqHfagLUeleuesyC4QO6ViO4X+0Vsz1PzeGazvWeOSbu3NoinYCNnY6qF/qlORFKwNMC/3Fg/LXHoHP4VTr4Pc4lVHN2rX9o4eXTw1qg/OZEQPYZ0k4iCamWOg3/wbPReMz1kouq0H4HzJ/l4mV4kEaBXv7gnW6oamxMF4DzXqyHRW6t+PzEMlRitu2pNs5fM0sDLmGBnFIql4jYWZe3iQI3ixxQ4z+cSwZCJaH/dFopvqRNh3CmDlphVCLHrYe2pxmupHUnOkG5mTiXrolX2MwhgmOXN/MdyM3ca3ucAGRR8d9nGetMM4LBV+Y5qVCVF5sGKz5zgdrBUzSjCUYGMaNt0TH5InxTQwq57XM7RtPE0l+lkW7GU30aDnII8hjxQU671HhgxHUSTL8+G25KNgYWD7q2ChATCQn27eKBq3bsO97uQ04+coVSh2bPYQLgsH/lcuwmHTn52L3hkda5CDr2GAGcGX50d4obxol7ucH5CDU/bIpzKb2769H0Khlv9Ab+8+23gRppzyrGOtmImxUTUNvImoWtXlMkgJS/+L5WBSzE5rCdKi/trOWXhiVEiC8dd3zvAxjtu2XCEALQnWFRC9WqaWchyGIKYe3OZZJwzeP3+rhg3GhvPcrOX5xi47/8GvPniYWBGxDZuZaM/JR58X6kkjC///M=
   on:
     tags: true
-    distributions: sdist bdist_wheel
     repo: opennode/waldur-paypal
+  distributions: "sdist bdist_wheel"
