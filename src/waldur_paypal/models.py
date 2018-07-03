@@ -121,8 +121,8 @@ class Invoice(LoggableMixin, UuidMixin, BackendModelMixin):
     tax_percent = models.DecimalField(default=0, max_digits=4, decimal_places=2,
                                       validators=[MinValueValidator(0), MaxValueValidator(100)])
     backend_id = models.CharField(max_length=128, blank=True)
-    issuer_details = JSONField(default={}, blank=True, help_text=_('Stores data about invoice issuer'))
-    payment_details = JSONField(default={}, blank=True, help_text=_('Stores data about customer payment details'))
+    issuer_details = JSONField(default=dict, blank=True, help_text=_('Stores data about invoice issuer'))
+    payment_details = JSONField(default=dict, blank=True, help_text=_('Stores data about customer payment details'))
     month = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(12)])
     year = models.PositiveSmallIntegerField()
 
